@@ -80,7 +80,13 @@ void ABTLCharacter::OnEndJump()
 
 void ABTLCharacter::OnMove(const FInputActionValue& Value)
 {
-	AddMovementInput(FVector(Value.Get<FVector2D>(), 0), 1, false);
+    FVector2D MovementVector = Value.Get<FVector2D>();
+
+    if (Controller != nullptr)
+    {
+    	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+    	AddMovementInput(GetActorRightVector(), MovementVector.X);
+    }
 }
 
 void ABTLCharacter::OnLook(const FInputActionValue& Value)
