@@ -13,12 +13,12 @@ void FBarkToLightModule::StartupModule()
 {
 	InitBarkToLightLog();
 	
-	BTL_LOG("Started main Pirate Survivors module!");
+	BTL_LOG("Started main Bark To Light module!");
 }
 
 void FBarkToLightModule::ShutdownModule()
 {
-	BTL_LOG_WARN("Shutting down main Pirate Survivors module.");
+	BTL_LOG_WARN("Shutting down main Bark To Light module.");
 	
 	DeinitBarkToLightLog();
 }

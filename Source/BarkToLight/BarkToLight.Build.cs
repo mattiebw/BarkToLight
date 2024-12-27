@@ -8,7 +8,7 @@ public class BarkToLight : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PBCharacterMovement" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PBCharacterMovement", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

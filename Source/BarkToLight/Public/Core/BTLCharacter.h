@@ -36,6 +36,10 @@ protected:
 	void OnSecondaryFire(const FInputActionValue& Value);
 	UFUNCTION()
 	void OnInteract(const FInputActionValue& Value);
+	UFUNCTION()
+	void OnBeginCrouchInput();
+	UFUNCTION()
+	void OnEndCrouchInput();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* MoveAction = nullptr;
@@ -49,6 +53,8 @@ protected:
 	UInputAction* SecondaryFireAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InteractAction = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* CrouchAction = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext = nullptr;

@@ -100,7 +100,7 @@ FORCEINLINE void BarkToLightLog(const uint8 LogVerbosity, const bool bLogToConso
 #if !UE_BUILD_SHIPPING
 	if (bLogToConsole)
 	{
-		WorldContext->GetWorld()->GetGameViewport()->ViewportConsole->OutputText(Msg);
+		GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::Assert)->GetGameViewport()->ViewportConsole->OutputText(Msg);
 	}
 #endif
 

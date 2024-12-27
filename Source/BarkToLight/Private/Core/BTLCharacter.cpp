@@ -52,13 +52,19 @@ void ABTLCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &ABTLCharacter::OnLook);
 
 		// Primary Fire
-		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Triggered, this, &ABTLCharacter::OnPrimaryFire);
-		
+		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Triggered, this,
+		                                   &ABTLCharacter::OnPrimaryFire);
+
 		// Secondary Fire
-		EnhancedInputComponent->BindAction(SecondaryFireAction, ETriggerEvent::Triggered, this, &ABTLCharacter::OnSecondaryFire);
-		
+		EnhancedInputComponent->BindAction(SecondaryFireAction, ETriggerEvent::Triggered, this,
+		                                   &ABTLCharacter::OnSecondaryFire);
+
 		// Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ABTLCharacter::OnInteract);
+
+		// Crouch
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ABTLCharacter::OnBeginCrouchInput);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ABTLCharacter::OnEndCrouchInput);
 	}
 	else
 	{
@@ -80,13 +86,13 @@ void ABTLCharacter::OnEndJump()
 
 void ABTLCharacter::OnMove(const FInputActionValue& Value)
 {
-    FVector2D MovementVector = Value.Get<FVector2D>();
+	FVector2D MovementVector = Value.Get<FVector2D>();
 
-    if (Controller != nullptr)
-    {
-    	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-    	AddMovementInput(GetActorRightVector(), MovementVector.X);
-    }
+	if (Controller != nullptr)
+	{
+		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+		AddMovementInput(GetActorRightVector(), MovementVector.X);
+	}
 }
 
 void ABTLCharacter::OnLook(const FInputActionValue& Value)
@@ -106,4 +112,14 @@ void ABTLCharacter::OnSecondaryFire(const FInputActionValue& Value)
 
 void ABTLCharacter::OnInteract(const FInputActionValue& Value)
 {
+}
+
+void ABTLCharacter::OnBeginCrouchInput()
+{
+	Crouch();
+}
+
+void ABTLCharacter::OnEndCrouchInput()
+{
+	UnCrouch();
 }
