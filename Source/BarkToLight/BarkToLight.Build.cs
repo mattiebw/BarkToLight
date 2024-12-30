@@ -7,17 +7,21 @@ public class BarkToLight : ModuleRules
 	public BarkToLight(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PBCharacterMovement", "UMG" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PBCharacterMovement", "UMG",
+			"GeometryScriptingCore", "GeometryFramework"
+		});
+
+		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		if (Target.bBuildEditor)
 			PrivateDependencyModuleNames.Add("MessageLog");
-		
+
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

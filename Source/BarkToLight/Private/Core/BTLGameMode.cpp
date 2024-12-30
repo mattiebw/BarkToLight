@@ -2,11 +2,11 @@
 
 #include "Core/BTLGameMode.h"
 
-#include "Core/BTLCharacter.h"
+#include "Core/BTLPlayerCharacter.h"
 #include "Core/BTLPlayerController.h"
 
 ABTLGameMode::ABTLGameMode()
 {
-	DefaultPawnClass = ABTLCharacter::StaticClass();
+	DefaultPawnClass = ABTLPlayerCharacter::StaticClass();
 	PlayerControllerClass = ABTLPlayerController::StaticClass();
 }

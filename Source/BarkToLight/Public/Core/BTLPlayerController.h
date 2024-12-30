@@ -23,7 +23,7 @@ public:
 	FORCEINLINE UHUDWidget* GetHUDWidget() const { return HUDWidget; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BTL Player Controller")
-	FORCEINLINE ABTLCharacter* GetBTLCharacter() const { return BTLCharacter; }
+	FORCEINLINE ABTLPlayerCharacter* GetBTLCharacter() const { return BTLCharacter; }
 	
 	virtual void OnPossess(APawn* InPawn) override;
 
@@ -32,5 +32,5 @@ protected:
 	UHUDWidget* HUDWidget;
 
 	UPROPERTY(BlueprintReadOnly, Category = "BTL Player Controller")
-	ABTLCharacter* BTLCharacter;
+	ABTLPlayerCharacter* BTLCharacter;
 };

@@ -8,4 +8,7 @@ class FBarkToLightEditorModule : public IModuleInterface
 public:
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
+
+    UFUNCTION()
+    void RegisterActorPlacements();
 };

@@ -2,7 +2,7 @@
 
 #include "UI/HUDWidget.h"
 
-void UHUDWidget::OnPawnPossessed_Implementation(ABTLCharacter* Character)
+void UHUDWidget::OnPawnPossessed_Implementation(ABTLPlayerCharacter* Character)
 {
 	
 }

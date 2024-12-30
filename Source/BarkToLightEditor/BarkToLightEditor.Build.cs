@@ -10,7 +10,9 @@ public class BarkToLightEditor : ModuleRules
             new string[]
             {
                 "Core",
-                "BarkToLight"
+                "BarkToLight",
+                "GeometryScriptingCore",
+                "GeometryScriptingEditor",
             }
         );
 
@@ -25,6 +27,7 @@ public class BarkToLightEditor : ModuleRules
                 "AssetDefinition",
                 "EditorFramework",
                 "UnrealEd",
+                "PlacementMode",
             }
         );
     }
