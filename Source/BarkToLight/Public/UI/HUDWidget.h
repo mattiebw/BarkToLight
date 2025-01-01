@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "HUDWidget.generated.h"
 
+class UTextBlock;
 class AWeapon;
 class ABTLPlayerCharacter;
 
@@ -29,9 +30,16 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "HUD")
 	void FadeIn(FLinearColor From, float Time = 0.5f);
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "HUD")
-	void FadeOutAndIn(FLinearColor To = FLinearColor::Black, float FadeOutTime = 0.5f, float HoldTime = 0.1f, float FadeInTime = 0.5f);
+	void FadeOutAndIn(FLinearColor To         = FLinearColor::Black, float FadeOutTime = 0.5f, float HoldTime = 0.1f,
+	                  float        FadeInTime = 0.5f);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "HUD")
+	void OnHealthChanged(float NewHealth, float HealthDifference);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "HUD")
 	ABTLPlayerCharacter* Player;
+
+	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
+	UTextBlock* HealthText;
 };

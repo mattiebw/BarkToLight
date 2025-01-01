@@ -88,6 +88,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	TArray<FDamageInstance> DamageLog;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthChanged OnHealthChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnHurt OnHurt;
+	UPROPERTY(BlueprintAssignable)
+	FOnHealed OnHealed;
+	UPROPERTY(BlueprintAssignable)
+	FOnKilled OnKilled;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	float Health = 100;
@@ -97,13 +106,4 @@ protected:
 	float OverhealDecayRate = 1.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Health")
 	bool bAllowOverheal = true;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnHealthChanged OnHealthChanged;
-	UPROPERTY(BlueprintAssignable)
-	FOnHurt OnHurt;
-	UPROPERTY(BlueprintAssignable)
-	FOnHealed OnHealed;
-	UPROPERTY(BlueprintAssignable)
-	FOnKilled OnKilled;
 };
