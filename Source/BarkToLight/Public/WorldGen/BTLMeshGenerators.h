@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "BTLMeshGenerators.generated.h"
 
+class USplineComponent;
 class UDynamicMesh;
 class UDynamicMeshComponent;
 
@@ -28,13 +29,23 @@ public:
 	static UDynamicMesh* ComputeNormalsAndUVs(UDynamicMesh* Mesh, FVector2D UVScale = FVector2D(0.1f, 0.1f));
 
 	UFUNCTION(BlueprintCallable, Category = "Bark To Light|Mesh Generation")
-	static UDynamicMesh* ScaleMeshByVertexZ(UDynamicMesh* Mesh, float MinZ, float MaxZ, FVector MinScale, FVector MaxScale);
+	static UDynamicMesh* ScaleMeshByVertexZ(UDynamicMesh* Mesh, float MinZ, float MaxZ, FVector MinScale,
+	                                        FVector       MaxScale);
 
 	UFUNCTION(BlueprintCallable, Category = "Bark To Light|Mesh Generation")
 	static UDynamicMesh* PerlinNoiseDeformation(UDynamicMesh* Mesh, FGeometryScriptMeshSelection Selection,
-	                                   FVector       PerAxisNoiseScale = FVector(1, 1, 1), int Seed = 0, float Magnitude = 5.0f, FVector Frequency = FVector(0.25));
+	                                            FVector       PerAxisNoiseScale = FVector(1, 1, 1), int Seed = 0,
+	                                            float         Magnitude = 5.0f, FVector Frequency = FVector(0.25));
 
 	UFUNCTION(BlueprintCallable, Category = "Bark To Light|Mesh Generation")
-	static void GenerateTreacheryFloor(UDynamicMeshComponent* MeshComponent, const FVector& Size, FVector PerAxisNoiseScale, FVector Frequency,
+	static void GenerateTreacheryFloor(UDynamicMeshComponent* MeshComponent, const FVector& Size,
+	                                   FVector                PerAxisNoiseScale, FVector    Frequency,
 	                                   int32                  Seed);
+
+	UFUNCTION(BlueprintCallable, Category = "Bark To Light|Mesh Generation")
+	static void
+	GenerateTreacheryWalkway(UDynamicMeshComponent* MeshComponent, USplineComponent* Spline, FVector2D Size,
+	                         float                  Detail, float SupportEvery,
+	                         float                  NoiseScale, float Frequency,
+	                         int32                  Seed);
 };

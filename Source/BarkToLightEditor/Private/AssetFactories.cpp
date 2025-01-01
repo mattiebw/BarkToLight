@@ -3,6 +3,8 @@
 #include "AssetFactories.h"
 
 #include "Core/LayerData.h"
+#include "Enemy/EnemyData.h"
+#include "Weapon/WeaponData.h"
 
 #define DEFINE_ASSET_FACTORY(Type, FullType) U##Type##Factory::U##Type##Factory()\
 {\
@@ -71,6 +73,36 @@ UObject* ULayerDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, 
                                              UObject* Context, FFeedbackContext* Warn)
 {
 	const auto Obj = NewObject<ULayerData>(InParent, Class, Name, Flags, Context);
+	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	return Obj;
+};
+
+UEnemyDataFactory::UEnemyDataFactory()
+{
+	SupportedClass = UEnemyData::StaticClass();
+	bEditAfterNew  = true;
+	bCreateNew     = true;
+}
+
+UObject* UEnemyDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, FName Name, EObjectFlags Flags,
+                                             UObject* Context, FFeedbackContext* Warn)
+{
+	const auto Obj = NewObject<UEnemyData>(InParent, Class, Name, Flags, Context);
+	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	return Obj;
+};
+
+UWeaponDataFactory::UWeaponDataFactory()
+{
+	SupportedClass = UWeaponData::StaticClass();
+	bEditAfterNew  = true;
+	bCreateNew     = true;
+}
+
+UObject* UWeaponDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, FName Name, EObjectFlags Flags,
+                                              UObject* Context, FFeedbackContext* Warn)
+{
+	const auto Obj = NewObject<UWeaponData>(InParent, Class, Name, Flags, Context);
 	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
 	return Obj;
 };

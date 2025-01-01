@@ -5,19 +5,27 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "BarkToLightLog.h"
+#include "Character/PBPlayerMovement.h"
 #include "Core/BTLPlayerController.h"
+#include "Core/HealthComponent.h"
+#include "Core/PlayerStats.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ABTLPlayerCharacter::ABTLPlayerCharacter(const FObjectInitializer& FObjectInitializer)
 	: Super(FObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 }
 
 void ABTLPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	LastKnownValidLocation = GetActorLocation();
+	UseStats(Stats ? Stats : NewObject<UPlayerStats>(this));
 }
 
 void ABTLPlayerCharacter::Tick(float DeltaTime)
@@ -89,6 +97,41 @@ void ABTLPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			*GetNameSafe(this));
 	}
 }
+
+void ABTLPlayerCharacter::UseStats(UPlayerStats* InStats)
+{
+	Stats = InStats;
+
+	HealthComponent->SetMaxHealth(Stats->Health);
+	HealthComponent->SetHealth(Stats->Health);
+	Stats->OnHealthChanged.AddDynamic(HealthComponent, &UHealthComponent::SetMaxHealth);
+
+	GetMovementPtr()->MaxWalkSpeed = Stats->Speed;
+	Stats->OnSpeedChanged.AddDynamic(this, &ABTLPlayerCharacter::OnSpeedChanged);
+	GetMovementPtr()->MaxWalkSpeedCrouched = Stats->Speed * Stats->CrouchSpeedMultiplier;
+	Stats->OnCrouchSpeedMultiplierChanged.AddDynamic(this, &ABTLPlayerCharacter::OnCrouchSpeedMultiplierChanged);
+	GetMovementPtr()->JumpZVelocity = Stats->JumpZ;
+	Stats->OnJumpZChanged.AddDynamic(this, &ABTLPlayerCharacter::OnJumpZChanged);
+}
+
+// -----------------------------
+// --- Stat Change Callbacks ---
+// -----------------------------
+void ABTLPlayerCharacter::OnSpeedChanged(float NewValue)
+{
+	GetMovementPtr()->MaxWalkSpeed = NewValue;
+}
+
+void ABTLPlayerCharacter::OnCrouchSpeedMultiplierChanged(float NewValue)
+{
+	GetMovementPtr()->MaxWalkSpeedCrouched = Stats->Speed * NewValue;
+}
+
+void ABTLPlayerCharacter::OnJumpZChanged(float NewValue)
+{
+	GetMovementPtr()->JumpZVelocity = NewValue;
+}
+// -----------------------------
 
 void ABTLPlayerCharacter::ReturnToLastKnownLocation(float TimeToWait, bool bDoDamage)
 {
