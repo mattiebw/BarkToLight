@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EnemyController.h"
 #include "Engine/DataAsset.h"
+#include "EnemyStats.h"
 #include "EnemyData.generated.h"
 
 class AEnemy;

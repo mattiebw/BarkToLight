@@ -17,7 +17,7 @@ public class BarkToLight : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		if (Target.bBuildEditor)
-			PrivateDependencyModuleNames.Add("MessageLog");
+			PrivateDependencyModuleNames.AddRange(new string[] { "MessageLog", "UnrealEd" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
