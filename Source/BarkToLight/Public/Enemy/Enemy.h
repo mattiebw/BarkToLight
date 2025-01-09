@@ -36,4 +36,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	UHealthComponent* HealthComponent;
+
+	bool bInitialised = false;
 };

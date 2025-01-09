@@ -3,11 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EnemyStats.h"
+#include "EnemyController.h"
 #include "Engine/DataAsset.h"
 #include "EnemyData.generated.h"
 
-class AEnemyController;
 class AEnemy;
 
 /**
@@ -26,7 +25,7 @@ public:
 	TSubclassOf<AEnemy> PawnSubclass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
-	TSubclassOf<AEnemyController> ControllerSubclass;
+	TSubclassOf<AEnemyController> ControllerSubclass = AEnemyController::StaticClass();
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Enemy")
 	UEnemyStats* DefaultStats;
