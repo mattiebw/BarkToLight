@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "RoomFactory.generated.h"
 
+struct FRoomDecoratorInfo;
 class URoomDecorator;
 class ARoom;
 
@@ -24,8 +25,17 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Room Factory")
 	URoomFactory* AddDecorator(TSubclassOf<URoomDecorator> DecoratorClass);
 
+	UFUNCTION(BlueprintCallable, Category = "Room Factory")
+	URoomFactory* AddDecoratorsFromSubclasses(TArray<TSubclassOf<URoomDecorator>> Decorators, float ChancePer = 1.f);
+
+	UFUNCTION(BlueprintCallable, Category = "Room Factory")
+	URoomFactory* AddDecoratorsFromInfos(TArray<FRoomDecoratorInfo> Decorators);
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Room Factory")
-	ARoom* GetRoom() { return Room; }
+	FORCEINLINE ARoom* GetRoom() const { return Room; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Room Factory")
+	FORCEINLINE ARoom* Finish() { ARoom* Temp = Room; Reset(); return Temp; }
 
 	UFUNCTION(BlueprintCallable, Category = "Room Factory")
 	URoomFactory* Reset();

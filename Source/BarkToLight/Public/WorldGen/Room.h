@@ -31,6 +31,9 @@ struct FConnectorPoint
 	ARoom* ConnectedRoom;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Connector")
+	int ConnectedToIndex = -1;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Connector")
 	bool bConnected = false;
 };
 
@@ -72,6 +75,9 @@ public:
 		Connectors[Index].bConnected = true;
 		Connectors[Index].ConnectorType = NewConnectorType;
 	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Room")
+	int GetTotalAvailableOutwardConnections();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room")
 	TArray<FConnectorPoint> Connectors;

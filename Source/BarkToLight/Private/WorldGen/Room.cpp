@@ -57,7 +57,7 @@ int ARoom::GetRandomFreeConnectionPointIndex(bool bAllowIn, bool bAllowOut, bool
 			FreePoints++;
 	if (FreePoints == 0)
 		return -1;
-	
+
 	int PointIndex = FMath::RandRange(0, FreePoints - 1);
 
 	for (int i = 0; i < Connectors.Num(); i++)
@@ -71,4 +71,18 @@ int ARoom::GetRandomFreeConnectionPointIndex(bool bAllowIn, bool bAllowOut, bool
 	}
 
 	return -1;
+}
+
+int ARoom::GetTotalAvailableOutwardConnections()
+{
+	int Num = 0;
+	for (const FConnectorPoint& Connector : Connectors)
+	{
+		if (!Connector.bConnected && (Connector.ConnectorType == ERoomConnectorType::Out || Connector.ConnectorType ==
+			ERoomConnectorType::Either))
+		{
+			Num++;
+		}
+	}
+	return Num;
 }

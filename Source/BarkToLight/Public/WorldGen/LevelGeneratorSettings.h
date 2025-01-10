@@ -3,12 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Room.h"
-#include "RoomDecorator.h"
-#include "RoomFactory.h"
 #include "Engine/DataAsset.h"
 #include "LevelGeneratorSettings.generated.h"
 
+class URoomDecorator;
+class ARoom;
 class URoomFactory;
 class ULevelDecorator;
 class AConnector;
@@ -30,6 +29,30 @@ struct FRoomInfo
 	int MaximumCount = 100;
 };
 
+USTRUCT(BlueprintType)
+struct FRoomDecoratorInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room Decorator Info")
+	TSubclassOf<URoomDecorator> DecoratorClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room Decorator Info")
+	float Chance = 1.f;
+};
+
+USTRUCT(BlueprintType)
+struct FLevelDecoratorInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Decorator Info")
+	TSubclassOf<ULevelDecorator> DecoratorClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Decorator Info")
+	float Chance = 1.f;
+};
+
 /**
  * This data container asset type contains information used by the level generator (ALevelGenerator)
  * to generate a level.
@@ -40,6 +63,8 @@ class BARKTOLIGHT_API ULevelGeneratorSettings : public UDataAsset
 	GENERATED_BODY()
 
 public:
+	ULevelGeneratorSettings();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
 	TArray<FRoomInfo> Rooms;
 
@@ -47,16 +72,16 @@ public:
 	TSubclassOf<ARoom> RootRoomOverride;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
-	TArray<TSubclassOf<URoomDecorator>> RoomDecorators;
+	TArray<FRoomDecoratorInfo> RoomDecorators;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
-	TSubclassOf<URoomFactory> RoomFactoryClass = URoomFactory::StaticClass();
+	TSubclassOf<URoomFactory> RoomFactoryClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
 	TSubclassOf<AConnector> ConnectorClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
-	TArray<TSubclassOf<ULevelDecorator>> LevelDecorators;
+	TArray<FLevelDecoratorInfo> LevelDecorators;
 
 	// Utility function to check that everything in the settings class is valid.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Level Generator Settings")

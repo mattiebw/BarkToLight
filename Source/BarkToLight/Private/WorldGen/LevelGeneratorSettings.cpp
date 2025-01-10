@@ -2,6 +2,13 @@
 
 #include "WorldGen/LevelGeneratorSettings.h"
 
+#include "WorldGen/RoomFactory.h"
+
+ULevelGeneratorSettings::ULevelGeneratorSettings()
+{
+	RoomFactoryClass = URoomFactory::StaticClass();
+}
+
 bool ULevelGeneratorSettings::Validate(FString& ErrorMessage, int MinRooms, int MaxRooms)
 {
 	// First, do we have any rooms at all?

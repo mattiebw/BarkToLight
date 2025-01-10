@@ -76,7 +76,8 @@ protected:
 
 	// Generator state
 	TArray<FRoomInfo> Rooms;
-	int RemainingHotPathRooms, RemainingRooms;
+	int RemainingHotPathRooms, RemainingRooms, TotalAvailableOutputs;
+	FRoomInfo* LastSelectedRoom;
 
 	UPROPERTY(BlueprintReadOnly)
 	URoomFactory* RoomFactory;
