@@ -78,6 +78,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Room")
 	int GetTotalAvailableOutwardConnections();
+
+	UFUNCTION(BlueprintCallable, Category = "Room")
+	void ConnectTo(int ConnectorIndex, ARoom* OtherRoom, int OtherConnectorIndex);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room")
 	TArray<FConnectorPoint> Connectors;

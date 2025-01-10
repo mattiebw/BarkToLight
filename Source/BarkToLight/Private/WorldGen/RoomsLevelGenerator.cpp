@@ -45,6 +45,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	int HotPathLength = FMath::RandRange(static_cast<int>(HotPathRoomCountRange.X),
 	                                     static_cast<int>(HotPathRoomCountRange.Y));
 	int RoomCount = FMath::RandRange(static_cast<int>(TotalRoomCountRange.X), static_cast<int>(TotalRoomCountRange.Y));
+	GeneratedRooms.Reserve(RoomCount);
 
 	// Validate some of our settings.
 	// Our total room count needs to be at least as large as our hot path count.
@@ -91,93 +92,93 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 	while (RemainingHotPathRooms > 0)
 	{
-		// First, if we have a previous room, let's find the connection point that we're going to connect to and mark it as connected.
-		if (Current == nullptr)
+		// Lets decrement the remaining hot path rooms now, so we don't forget.
+		RemainingHotPathRooms--;
+
+		// First, lets find the room we're going to place.
+		TSubclassOf<ARoom> NextRoomClass = nullptr;
+		if (Current == nullptr && RoomsSettings->RootRoomOverride.Get() != nullptr)
 		{
-			// We don't have a room at the moment, so just initialise to an empty node. We'll then use that as our root room/node.
-			RootRoom = FRoomNode();
-			Current  = &RootRoom;
+			// This is the first room and we have a root room override, so we'll use that.
+			NextRoomClass = RoomsSettings->RootRoomOverride;
 		}
 		else
 		{
-			// We have a previous room, so let's find a free connection point and mark it as connected.
-			// We'll setup our current node to be the node we're connecting to.
-
-			int OutIndex = Current->Actor->GetRandomFreeConnectionPointIndex(false, true, true);
-			if (OutIndex == -1)
-			{
-				BTL_LOGC_ERROR_NOLOC(
-					GetWorld(),
-					"In LevelGenerator::Generate(), somehow we've created a room on the hot path that doesn't have any free outward connectors.");
-				return;
-			}
-			Current->Actor->MarkConnectionConnected(OutIndex, ERoomConnectorType::Out);
-			TotalAvailableOutputs--; // We've used up one of our outputs, so decrement the total available outputs.
-
-			// Check to see if we have any free connectors, so we can record our room for future usage.
-			if (Current->Actor->HasAnyFreeConnectionPoints(false, true, true))
-				RoomsWithFreeOutwardConnectors.Add(Current);
-
-			Prev    = Current;
-			Current = &Current->Children[OutIndex];
-		}
-
-		// Now it's time to set up our new room.
-		TSubclassOf<ARoom> RoomClass;
-		if (RemainingHotPathRooms == HotPathLength && RoomsSettings->RootRoomOverride.Get())
-		{
-			// This is our root room, and we have a root room override, so we should use that instead.
-			RoomClass = RoomsSettings->RootRoomOverride;
-		}
-		else
-		{
-			// Otherwise, just use our next room function.
-			FRoomInfo* NextRoom = nullptr;
-			if (!GetNextRoom(NextRoom))
+			// We don't have a root room override, so we'll need to find a room that satisfies our conditions.
+			// The GetNextRoom function will handle this for us.
+			FRoomInfo* NextRoomInfo = nullptr;
+			if (!GetNextRoom(NextRoomInfo))
 			{
 				// We've failed to satisfy the conditions!
-				// TODO: What do we do here?
+				BTL_LOGC_ERROR(GetWorld(), "Level generator failed to satisfy conditions - no valid rooms to place.");
 				return;
 			}
-			RoomClass = NextRoom->RoomClass;
+			NextRoomClass = NextRoomInfo->RoomClass;
 		}
 
-		// Build our room!
-		RoomFactory->Reset()
-		           ->CreateRoom(RoomClass)
-		           ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators);
+		// Create the new room using our factory.
+		ARoom* NewRoom = RoomFactory->Reset()
+		                            ->CreateRoom(NextRoomClass)
+		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
+		                            ->Finish();
+		GeneratedRooms.Add(NewRoom);
 
-		Current->Actor = RoomFactory->Finish(); // Set the actor for this node.
-		// Now, initialise this node's children with the correct number based on the amount of connectors we have.
-		Current->Children.Init(FRoomNode(), Current->Actor->Connectors.Num());
-
-		if (Prev != nullptr)
+		if (Current == nullptr)
 		{
-			// Figure out which of our connectors was the inward connector.
-			int InIndex = Current->Actor->GetRandomFreeConnectionPointIndex(true, false, true);
-			if (InIndex == -1)
-			{
-				BTL_LOGC_ERROR_NOLOC(
-					GetWorld(),
-					"In LevelGenerator::Generate(), somehow we've created a room on the hot path that doesn't have any free inward connectors.");
-				return;
-			}
-			Current->Actor->MarkConnectionConnected(InIndex, ERoomConnectorType::In);
-			// We don't need to set the Current->Children[InIndex] node, as our graph structure doesn't need to go backwards.
-			// We also don't need to mark it as connected in the graph structure, as it is marked connected in the room actor itself,
-			// which is what we use to determine if a connection is connected or not, as it holds the FConnectors.
+			// If current is null, this is the first room, so we don't need to connect to any previous room.
+			// We can just set this room as the root room, update Current, and return.
+			// Since RootRoom is a member of this class, it'll be kept alive and we can store a pointer to it.
+			RootRoom = FRoomNode(NewRoom);
+			Current  = &RootRoom;
+			continue;
 		}
 
-		// Calculate our total available outputs now that we've finished setting up the room and its connectors.
-		TotalAvailableOutputs += Current->Actor->GetTotalAvailableOutwardConnections();
-		RemainingHotPathRooms--;
+		// Find the valid connecting points for the current room and our new room.
+		int NewRoomInConnectorIndex = NewRoom->GetRandomFreeConnectionPointIndex(true, false, true);
+		if (NewRoomInConnectorIndex == -1)
+		{
+			BTL_LOGC_ERROR(GetWorld(),
+			               "In LevelGenerator::Generate(), somehow we've created a room that doesn't have any free inward connectors.");
+			return;
+		}
+
+		int CurrentRoomOutConnectorIndex = Current->Actor->GetRandomFreeConnectionPointIndex(false, true, true);
+		if (CurrentRoomOutConnectorIndex == -1)
+		{
+			BTL_LOGC_ERROR(GetWorld(),
+			               "In LevelGenerator::Generate(), somehow we've selected a room with no free outward connectors.");
+			return;
+		}
+
+		// Connect the rooms.
+		Current->Actor->ConnectTo(CurrentRoomOutConnectorIndex, NewRoom, NewRoomInConnectorIndex);
+
+		// Update the child of the current room, and then update current to be our new room.
+		Current->Children[CurrentRoomOutConnectorIndex] = FRoomNode(NewRoom);
+		Current                                         = &Current->Children[CurrentRoomOutConnectorIndex];
 	}
 
-	// Filter out any rooms that don't have any free outward connectors.
-	RoomsWithFreeOutwardConnectors = RoomsWithFreeOutwardConnectors.FilterByPredicate([](FRoomNode* Node)
+	// Now we want to populate our arrays and variables that the rest of the generation algorithm will use.
+	// We'll do a quick BFS through our graph to do this.
+	TQueue<FRoomNode*> ToBeProcessed;
+	ToBeProcessed.Enqueue(&RootRoom);
+	FRoomNode* CurrentNode = nullptr;
+	while (ToBeProcessed.Dequeue(CurrentNode))
 	{
-		return Node->Actor->HasAnyFreeConnectionPoints(false, true, true);
-	});
+		if (CurrentNode->Actor == nullptr)
+			continue;
+
+		int AvailableConnectors = CurrentNode->Actor->GetTotalAvailableOutwardConnections();
+		TotalAvailableOutputs += AvailableConnectors;
+		if (AvailableConnectors > 0)
+			RoomsWithFreeOutwardConnectors.Add(CurrentNode);
+
+		// Enqueue all of the children, as part of the BFS.
+		for (auto& Node : CurrentNode->Children)
+		{
+			ToBeProcessed.Enqueue(&Node);
+		}
+	}
 
 	RemainingRooms = RoomCount - HotPathLength;
 
@@ -187,54 +188,53 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		// Find a random room that has free outward connectors.
 		if (RoomsWithFreeOutwardConnectors.IsEmpty())
 		{
-			BTL_LOGC_ERROR(
-				GetWorld(),
-				"In LevelGenerator::Generate(), we've run out of rooms with free outward connectors before we've placed all of our rooms.");
+			BTL_LOGC_ERROR(GetWorld(),
+			               "In LevelGenerator::Generate(), we've run out of rooms with free outward connectors before we've placed all of our rooms.");
 			return;
 		}
 
-		// MW @todo @copypaste: This is a copy-paste of the code above, we should probably refactor this into a function.
-		FRoomNode* Node = RoomsWithFreeOutwardConnectors[FMath::RandRange(0, RoomsWithFreeOutwardConnectors.Num() - 1)];
-		int        OutIndex = Node->Actor->GetRandomFreeConnectionPointIndex(false, true, true);
-		if (OutIndex == -1)
-		{
-			BTL_LOGC_ERROR(
-				GetWorld(),
-				"In LevelGenerator::Generate(), somehow we've selected a room with no free outward connectors.");
-			return;
-		}
-		Node->Actor->MarkConnectionConnected(OutIndex, ERoomConnectorType::Out);
-		TotalAvailableOutputs--; // We've used up one of our outputs, so decrement the total available outputs.
-		// Also, since we've used up one of our outputs, we should remove this room from our list of rooms with free outward connectors if it doesn't have any left.
-		if (!Node->Actor->HasAnyFreeConnectionPoints(false, true, true))
-			RoomsWithFreeOutwardConnectors.Remove(Node);
-		FRoomNode* NextNode = &Node->Children[OutIndex];
+		FRoomNode* NodeToBranchFrom = RoomsWithFreeOutwardConnectors[FMath::RandRange(
+			0, RoomsWithFreeOutwardConnectors.Num() - 1)];
 
-		FRoomInfo* NextRoom = nullptr;
-		if (!GetNextRoom(NextRoom))
+		FRoomInfo* NextRoomInfo = nullptr;
+		if (!GetNextRoom(NextRoomInfo))
 		{
-			// We've failed to satisfy the conditions!
 			BTL_LOGC_ERROR(GetWorld(), "Level generator failed to satisfy conditions - no valid rooms to place.");
 			return;
 		}
-		NextNode->Actor = RoomFactory->Reset()
-		                             ->CreateRoom(NextRoom->RoomClass)
-		                             ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
-		                             ->Finish();
-		NextNode->Children.Init(FRoomNode(), NextNode->Actor->Connectors.Num());
-		// Find the inward connector and mark it as connected.
-		int InIndex = NextNode->Actor->GetRandomFreeConnectionPointIndex(true, false, true);
-		if (InIndex == -1)
+
+		ARoom* NewRoom = RoomFactory->Reset()
+		                            ->CreateRoom(NextRoomInfo->RoomClass)
+		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
+		                            ->Finish();
+
+		int FromConnectorIndex = NodeToBranchFrom->Actor->GetRandomFreeConnectionPointIndex(false, true, true);
+		if (FromConnectorIndex == -1)
 		{
-			BTL_LOGC_ERROR(
-				GetWorld(),
-				"In LevelGenerator::Generate(), somehow we've created a room that doesn't have any free inward connectors.");
+			BTL_LOGC_ERROR(GetWorld(),
+			               "In LevelGenerator::Generate(), somehow we've selected a room with no free outward connectors.");
 			return;
 		}
-		NextNode->Actor->MarkConnectionConnected(InIndex, ERoomConnectorType::In);
-		// Check to see if this new room has any free outward connectors, so we can record it for future usage.
-		if (NextNode->Actor->HasAnyFreeConnectionPoints(false, true, true))
-			RoomsWithFreeOutwardConnectors.Add(NextNode);
+		int ToConnectorIndex = NewRoom->GetRandomFreeConnectionPointIndex(true, false, true);
+		if (ToConnectorIndex == -1)
+		{
+			BTL_LOGC_ERROR(GetWorld(),
+			               "In LevelGenerator::Generate(), somehow we've created a room that doesn't have any free inward connectors.");
+			return;
+		}
+
+		// Do the connection and update the children.
+		NodeToBranchFrom->Actor->ConnectTo(FromConnectorIndex, NewRoom, ToConnectorIndex);
+		NodeToBranchFrom->Children[FromConnectorIndex] = FRoomNode(NewRoom);
+
+		// Update our arrays and variables.
+		TotalAvailableOutputs--;
+		if (!NodeToBranchFrom->Actor->HasAnyFreeConnectionPoints(false, true, true))
+			RoomsWithFreeOutwardConnectors.Remove(NodeToBranchFrom);
+		int AvailableConnectors = NewRoom->GetTotalAvailableOutwardConnections();
+		TotalAvailableOutputs += AvailableConnectors;
+		if (AvailableConnectors > 0)
+			RoomsWithFreeOutwardConnectors.Add(&NodeToBranchFrom->Children[FromConnectorIndex]);
 
 		RemainingRooms--;
 	}
@@ -242,13 +242,11 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	// Layout phase
 	// Correct actor locations and rotations to prevent overlap
 	// BFS through the graph, starting from the root room
-	TQueue<FRoomNode*> ToBeProcessed;
+	ToBeProcessed.Empty(); // Ensure our queue from earlier is empty.
+	CurrentNode = nullptr; // Reset our current node.
 	ToBeProcessed.Enqueue(&RootRoom);
-	while (!ToBeProcessed.IsEmpty())
+	while (ToBeProcessed.Dequeue(CurrentNode))
 	{
-		FRoomNode* Node = nullptr;
-		ToBeProcessed.Dequeue(Node);
-
 		// Position in the world.
 
 		// For each connector:
@@ -256,13 +254,12 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		//	- Create connector if needed.
 		//  - Add children to the queue.
 
-		for (int i = 0; i < Node->Children.Num(); i++)
+		for (int i = 0; i < CurrentNode->Children.Num(); i++)
 		{
-			FRoomNode* Child = &Node->Children[i];
+			FRoomNode* Child = &CurrentNode->Children[i];
 
 			if (Child->Actor == nullptr)
 				continue;
-
 
 			ToBeProcessed.Enqueue(Child);
 		}

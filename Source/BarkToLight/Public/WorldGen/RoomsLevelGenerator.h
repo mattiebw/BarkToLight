@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "LevelGeneratorBase.h"
+#include "Room.h"
 #include "GameFramework/Actor.h"
 #include "RoomsLevelGenerator.generated.h"
 
@@ -31,6 +32,13 @@ struct FRoomNode
 		Actor = nullptr;
 		Children = TArray<FRoomNode>();
 	}
+
+	FRoomNode(ARoom* Room)
+	{
+		Actor = Room;
+		Children = TArray<FRoomNode>();
+		Children.Init(FRoomNode(), Room->Connectors.Num());
+	}
 };
 
 UCLASS()
@@ -45,7 +53,7 @@ public:
 
 	virtual void Generate_Implementation() override;
 
-	UFUNCTION(BlueprintCallable, Category = "Level Generator")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Level Generator")
 	void DestroyLevel();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")

@@ -2,6 +2,8 @@
 
 #include "WorldGen/Room.h"
 
+#include "BarkToLightLog.h"
+
 ARoom::ARoom()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -85,4 +87,29 @@ int ARoom::GetTotalAvailableOutwardConnections()
 		}
 	}
 	return Num;
+}
+
+void ARoom::ConnectTo(int ConnectorIndex, ARoom* OtherRoom, int OtherConnectorIndex)
+{
+	if (!Connectors.IsValidIndex(ConnectorIndex))
+	{
+		BTL_LOGC_ERROR(GetWorld(), "In ARoom::ConnectTo(), ConnectorIndex is out of range.");
+		return;
+	}
+
+	if (!OtherRoom->Connectors.IsValidIndex(OtherConnectorIndex))
+	{
+		BTL_LOGC_ERROR(GetWorld(), "In ARoom::ConnectTo(), OtherConnectorIndex is out of range.");
+		return;
+	}
+
+	Connectors[ConnectorIndex].bConnected = true;
+	Connectors[ConnectorIndex].ConnectorType = ERoomConnectorType::Out;
+	Connectors[ConnectorIndex].ConnectedRoom = OtherRoom;
+	Connectors[ConnectorIndex].ConnectedToIndex = OtherConnectorIndex;
+	
+	OtherRoom->Connectors[OtherConnectorIndex].bConnected = true;
+	OtherRoom->Connectors[OtherConnectorIndex].ConnectorType = ERoomConnectorType::In;
+	OtherRoom->Connectors[OtherConnectorIndex].ConnectedRoom = this;
+	OtherRoom->Connectors[OtherConnectorIndex].ConnectedToIndex = ConnectorIndex;
 }
