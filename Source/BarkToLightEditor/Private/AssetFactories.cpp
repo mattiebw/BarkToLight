@@ -5,7 +5,7 @@
 #include "Core/LayerData.h"
 #include "Enemy/EnemyData.h"
 #include "Weapon/WeaponData.h"
-#include "WorldGen/LevelGeneratorSettings.h"
+#include "WorldGen/RoomsLevelGeneratorSettings.h"
 
 #define DEFINE_ASSET_FACTORY(Type, FullType) U##Type##Factory::U##Type##Factory()\
 {\
@@ -110,7 +110,7 @@ UObject* UWeaponDataFactory::FactoryCreateNew(UClass* Class, UObject* InParent, 
 
 ULevelGeneratorSettingsFactory::ULevelGeneratorSettingsFactory()
 {
-	SupportedClass = ULevelGeneratorSettings::StaticClass();
+	SupportedClass = URoomsLevelGeneratorSettings::StaticClass();
 	bEditAfterNew = true;
 	bCreateNew = true;
 }
@@ -118,5 +118,5 @@ ULevelGeneratorSettingsFactory::ULevelGeneratorSettingsFactory()
 UObject* ULevelGeneratorSettingsFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name,
                                                           EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
 {
-	return NewObject<ULevelGeneratorSettings>(InParent, Class, Name, Flags, Context);
+	return NewObject<URoomsLevelGeneratorSettings>(InParent, Class, Name, Flags, Context);
 };

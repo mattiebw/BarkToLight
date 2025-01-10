@@ -3,7 +3,7 @@
 #include "WorldGen/RoomFactory.h"
 
 #include "BarkToLightLog.h"
-#include "WorldGen/LevelGeneratorSettings.h"
+#include "WorldGen/RoomsLevelGeneratorSettings.h"
 #include "WorldGen/Room.h"
 #include "WorldGen/RoomDecorator.h"
 

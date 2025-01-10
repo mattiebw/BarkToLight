@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelGeneratorSettingsBase.h"
 #include "Engine/DataAsset.h"
-#include "LevelGeneratorSettings.generated.h"
+#include "RoomsLevelGeneratorSettings.generated.h"
 
 class URoomDecorator;
 class ARoom;
@@ -58,12 +59,12 @@ struct FLevelDecoratorInfo
  * to generate a level.
  */ 
 UCLASS()
-class BARKTOLIGHT_API ULevelGeneratorSettings : public UDataAsset
+class BARKTOLIGHT_API URoomsLevelGeneratorSettings : public ULevelGeneratorSettingsBase
 {
 	GENERATED_BODY()
 
 public:
-	ULevelGeneratorSettings();
+	URoomsLevelGeneratorSettings();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
 	TArray<FRoomInfo> Rooms;

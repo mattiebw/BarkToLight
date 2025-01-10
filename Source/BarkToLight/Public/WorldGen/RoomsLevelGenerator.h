@@ -3,14 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelGeneratorBase.h"
 #include "GameFramework/Actor.h"
-#include "LevelGenerator.generated.h"
+#include "RoomsLevelGenerator.generated.h"
 
 struct FRoomInfo;
 class URoomFactory;
 class AConnector;
 class ARoom;
-class ULevelGeneratorSettings;
+class URoomsLevelGeneratorSettings;
 
 USTRUCT(BlueprintType)
 struct FRoomNode
@@ -33,26 +34,19 @@ struct FRoomNode
 };
 
 UCLASS()
-class BARKTOLIGHT_API ALevelGenerator : public AActor
+class BARKTOLIGHT_API ARoomsLevelGenerator : public ALevelGeneratorBase
 {
 	GENERATED_BODY()
 
 public:
-	ALevelGenerator();
+	ARoomsLevelGenerator();
 
 	virtual void Destroyed() override;
-	
-	UFUNCTION(BlueprintCallable, Category = "Level Generator")
-	void Generate();
 
-	UFUNCTION(CallInEditor, Category = "Level Generator")
-	void GenerateInEditor();
+	virtual void Generate_Implementation() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Level Generator")
 	void DestroyLevel();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
-	ULevelGeneratorSettings* Settings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
 	FVector2f HotPathRoomCountRange = FVector2f(15, 25);
@@ -81,4 +75,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	URoomFactory* RoomFactory;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Level Generator")
+	URoomsLevelGeneratorSettings* RoomsSettings;
 };

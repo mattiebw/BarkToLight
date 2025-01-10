@@ -6,7 +6,7 @@
 #include "UObject/Object.h"
 #include "LevelDecorator.generated.h"
 
-class ALevelGenerator;
+class ARoomsLevelGenerator;
 
 /**
  * 
@@ -20,5 +20,5 @@ public:
 	void Decorate();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Decorator")
-	ALevelGenerator* Level;
+	ARoomsLevelGenerator* Level;
 };

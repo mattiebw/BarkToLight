@@ -1,32 +1,41 @@
 ﻿// copyright lolol
 
-#include "WorldGen/LevelGenerator.h"
+#include "WorldGen/RoomsLevelGenerator.h"
 
 #include "BarkToLightLog.h"
 #include "WorldGen/Connector.h"
-#include "WorldGen/LevelGeneratorSettings.h"
 #include "WorldGen/Room.h"
 #include "WorldGen/RoomFactory.h"
+#include "WorldGen/RoomsLevelGeneratorSettings.h"
 
-ALevelGenerator::ALevelGenerator()
+ARoomsLevelGenerator::ARoomsLevelGenerator()
 {
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-void ALevelGenerator::Destroyed()
+void ARoomsLevelGenerator::Destroyed()
 {
 	Super::Destroyed();
 	// Destroy the level if the generator is destroyed, as the generator is the only thing which is keeping a reference to all the level objects.
 	DestroyLevel();
 }
 
-void ALevelGenerator::Generate()
+void ARoomsLevelGenerator::Generate_Implementation()
 {
 	BTL_LOGC_NOLOC(GetWorld(), "Generating level...");
 	double Start = FPlatformTime::Seconds();
-	
+
+	RoomsSettings = Cast<URoomsLevelGeneratorSettings>(Settings);
+	if (RoomsSettings == nullptr)
+	{
+		BTL_LOGC_ERROR_NOLOC(
+			GetWorld(),
+			"In ALevelGenerator, Generate() called with invalid Settings (not URoomsLevelGeneratorSettings).");
+		return;
+	}
+
 	// First, let's check that we have some settings.
-	if (Settings == nullptr)
+	if (RoomsSettings == nullptr)
 	{
 		BTL_LOGC_ERROR_NOLOC(GetWorld(), "In ALevelGenerator, Generate() called with nullptr Settings.");
 		return;
@@ -50,7 +59,7 @@ void ALevelGenerator::Generate()
 
 	// Now we can do our basic validation checks on the settings.
 	FString Error;
-	if (!Settings->Validate(Error, RoomCount, RoomCount))
+	if (!RoomsSettings->Validate(Error, RoomCount, RoomCount))
 	{
 		BTL_LOGC_ERROR_NOLOC(GetWorld(), "In ALevelGenerator, Generate() called with invalid Settings: %s", *Error);
 		return;
@@ -60,10 +69,10 @@ void ALevelGenerator::Generate()
 	DestroyLevel();
 
 	// Create our room factory.
-	RoomFactory = NewObject<URoomFactory>(this, Settings->RoomFactoryClass);
+	RoomFactory = NewObject<URoomFactory>(this, RoomsSettings->RoomFactoryClass);
 
 	// Copy the rooms array into a local copy, so we can modify the counts.
-	Rooms = Settings->Rooms;
+	Rooms = RoomsSettings->Rooms;
 
 	// Okay, now it's time to actually generate our level.
 	// The algorithm goes something like this:
@@ -115,10 +124,10 @@ void ALevelGenerator::Generate()
 
 		// Now it's time to set up our new room.
 		TSubclassOf<ARoom> RoomClass;
-		if (RemainingHotPathRooms == HotPathLength && Settings->RootRoomOverride.Get())
+		if (RemainingHotPathRooms == HotPathLength && RoomsSettings->RootRoomOverride.Get())
 		{
 			// This is our root room, and we have a root room override, so we should use that instead.
-			RoomClass = Settings->RootRoomOverride;
+			RoomClass = RoomsSettings->RootRoomOverride;
 		}
 		else
 		{
@@ -136,7 +145,7 @@ void ALevelGenerator::Generate()
 		// Build our room!
 		RoomFactory->Reset()
 		           ->CreateRoom(RoomClass)
-		           ->AddDecoratorsFromInfos(Settings->RoomDecorators);
+		           ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators);
 
 		Current->Actor = RoomFactory->Finish(); // Set the actor for this node.
 		// Now, initialise this node's children with the correct number based on the amount of connectors we have.
@@ -210,7 +219,7 @@ void ALevelGenerator::Generate()
 		}
 		NextNode->Actor = RoomFactory->Reset()
 		                             ->CreateRoom(NextRoom->RoomClass)
-		                             ->AddDecoratorsFromInfos(Settings->RoomDecorators)
+		                             ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                             ->Finish();
 		NextNode->Children.Init(FRoomNode(), NextNode->Actor->Connectors.Num());
 		// Find the inward connector and mark it as connected.
@@ -239,7 +248,7 @@ void ALevelGenerator::Generate()
 	{
 		FRoomNode* Node = nullptr;
 		ToBeProcessed.Dequeue(Node);
-		
+
 		// Position in the world.
 
 		// For each connector:
@@ -250,11 +259,10 @@ void ALevelGenerator::Generate()
 		for (int i = 0; i < Node->Children.Num(); i++)
 		{
 			FRoomNode* Child = &Node->Children[i];
-			
+
 			if (Child->Actor == nullptr)
 				continue;
 
-			
 
 			ToBeProcessed.Enqueue(Child);
 		}
@@ -268,12 +276,7 @@ void ALevelGenerator::Generate()
 	BTL_LOGC_NOLOC(GetWorld(), "Level generation took %f seconds.", End - Start);
 }
 
-void ALevelGenerator::GenerateInEditor()
-{
-	Generate();
-}
-
-void ALevelGenerator::DestroyLevel()
+void ARoomsLevelGenerator::DestroyLevel()
 {
 	for (auto Room : GeneratedRooms)
 		Room->Destroy();
@@ -283,7 +286,7 @@ void ALevelGenerator::DestroyLevel()
 	GeneratedConnectors.Empty();
 }
 
-bool ALevelGenerator::GetNextRoom(FRoomInfo*& Output)
+bool ARoomsLevelGenerator::GetNextRoom(FRoomInfo*& Output)
 {
 	if (Rooms.IsEmpty())
 	{
@@ -298,7 +301,7 @@ bool ALevelGenerator::GetNextRoom(FRoomInfo*& Output)
 	{
 		if (Room.MaximumCount <= 0) // Skip rooms that have reached their maximum count.
 			continue;
-		
+
 		if (RemainingHotPathRooms > 0 || TotalAvailableOutputs <= 1)
 		{
 			if (Room.RoomClass.GetDefaultObject()->RoomIsNotDeadEnd())
@@ -316,7 +319,7 @@ bool ALevelGenerator::GetNextRoom(FRoomInfo*& Output)
 
 	if (Output)
 	{
-		Output->MaximumCount--;        // Decrement the maximum count of this room, so we don't place it too many times.
+		Output->MaximumCount--; // Decrement the maximum count of this room, so we don't place it too many times.
 	}
 	else
 	{
@@ -324,7 +327,7 @@ bool ALevelGenerator::GetNextRoom(FRoomInfo*& Output)
 		// TODO: What do we do here?
 		// For now, lets return a random room from the main array.
 		// This is a temporary solution, and should be replaced with a more robust system.
-		Output = &Settings->Rooms[FMath::RandRange(0, Rooms.Num() - 1)];
+		Output = &RoomsSettings->Rooms[FMath::RandRange(0, Rooms.Num() - 1)];
 	}
 
 	if (Output != nullptr)

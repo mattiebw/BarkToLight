@@ -1,15 +1,15 @@
 ﻿// copyright lolol
 
-#include "WorldGen/LevelGeneratorSettings.h"
+#include "WorldGen/RoomsLevelGeneratorSettings.h"
 
 #include "WorldGen/RoomFactory.h"
 
-ULevelGeneratorSettings::ULevelGeneratorSettings()
+URoomsLevelGeneratorSettings::URoomsLevelGeneratorSettings()
 {
 	RoomFactoryClass = URoomFactory::StaticClass();
 }
 
-bool ULevelGeneratorSettings::Validate(FString& ErrorMessage, int MinRooms, int MaxRooms)
+bool URoomsLevelGeneratorSettings::Validate(FString& ErrorMessage, int MinRooms, int MaxRooms)
 {
 	// First, do we have any rooms at all?
 	if (Rooms.IsEmpty())
@@ -62,7 +62,7 @@ bool ULevelGeneratorSettings::Validate(FString& ErrorMessage, int MinRooms, int 
 	return true;
 }
 
-void ULevelGeneratorSettings::CheckIsValid()
+void URoomsLevelGeneratorSettings::CheckIsValid()
 {
 	FString ErrorMessage;
 	bool bIsValid = Validate(ErrorMessage);

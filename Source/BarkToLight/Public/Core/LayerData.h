@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "LayerData.generated.h"
 
+class ALevelGeneratorBase;
 /**
  * Contains data for a layer of hell that the player can traverse.
  */
@@ -20,4 +21,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layer Data")
 	int Depth = 9;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Layer Data")
+	TSubclassOf<ALevelGeneratorBase> LevelGeneratorClass;
 };
