@@ -207,6 +207,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		                            ->CreateRoom(NextRoomInfo->RoomClass)
 		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                            ->Finish();
+		GeneratedRooms.Add(NewRoom);
 
 		int FromConnectorIndex = NodeToBranchFrom->Actor->GetRandomFreeConnectionPointIndex(false, true, true);
 		if (FromConnectorIndex == -1)
@@ -247,10 +248,8 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	ToBeProcessed.Enqueue(&RootRoom);
 	while (ToBeProcessed.Dequeue(CurrentNode))
 	{
-		// Position in the world.
-
 		// For each connector:
-		//	- Fix up references in child.
+		//  - Position the child correctly.
 		//	- Create connector if needed.
 		//  - Add children to the queue.
 
@@ -260,6 +259,15 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 			if (Child->Actor == nullptr)
 				continue;
+
+			// Position the child correctly.
+			int ChildConnectorIndex = CurrentNode->Actor->Connectors[i].ConnectedToIndex;
+
+			FTransform CurrentConnector = CurrentNode->Actor->GetTransform() +
+				CurrentNode->Actor->Connectors[i].Offset;
+			CurrentConnector.SetScale3D(FVector::OneVector);
+
+			Child->Actor->SetActorTransform(CurrentConnector);
 
 			ToBeProcessed.Enqueue(Child);
 		}
