@@ -84,6 +84,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
 	TArray<FLevelDecoratorInfo> LevelDecorators;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
+	float MinimumRoomY = 2000;
+
 	// Utility function to check that everything in the settings class is valid.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Level Generator Settings")
 	bool Validate(FString& ErrorMessage, int MinRooms = 0, int MaxRooms = 2147483647);

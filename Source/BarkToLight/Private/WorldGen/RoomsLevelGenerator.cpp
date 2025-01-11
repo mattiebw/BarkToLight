@@ -322,12 +322,25 @@ void ARoomsLevelGenerator::Generate_Implementation()
 					                               CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange.Y),
 				                               0) + Child->Actor->GetActorRotation());
 
-			// Set child's position such that the connectors are at the same location.
+			// Find a position for the child that doesn't overlap with any other rooms.
 			// First, recalculate the transform, as we've changed the rotation.
 			ChildTF               = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
+			FBox ChildBounds = Child->Actor->GetComponentsBoundingBox();
 			FVector DeltaLocation = ConnectorTF.GetLocation() - ChildTF.GetLocation();
+			FVector Direction = (Child->Actor->GetActorLocation() + DeltaLocation) - ConnectorTF.GetLocation();
 			Child->Actor->SetActorLocation(Child->Actor->GetActorLocation() + DeltaLocation);
-
+			Direction.Normalize();
+			Direction.Z = FMath::RandRange(-0.1f, 0.1f);
+			float Magnitude = 500;
+			do
+			{
+				FVector TargetLoc = Child->Actor->GetActorLocation() + Direction * Magnitude;
+				TargetLoc.Z = FMath::Max(TargetLoc.Z, RoomsSettings->MinimumRoomY);
+				Child->Actor->SetActorLocation(TargetLoc);
+				Magnitude += 500;
+				ChildBounds = Child->Actor->GetComponentsBoundingBox();
+			} while (BoundsChecker.BoundsOverlapAnyBounds(ChildBounds));
+			
 			// Now that we have positioned the child, we can debug draw the new connector locations.
 			if (bDrawDebug)
 			{
