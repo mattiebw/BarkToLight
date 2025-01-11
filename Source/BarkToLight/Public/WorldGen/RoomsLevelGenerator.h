@@ -27,6 +27,9 @@ struct FRoomNode
 	// For now, we'll just force generators to be implemented in C++.
 	TArray<FRoomNode> Children;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room")
+	int Depth = 0;
+
 	FRoomNode()
 	{
 		Actor = nullptr;
@@ -67,6 +70,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Level Generator")
 	FRoomNode RootRoom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
+	bool bDrawDebug = false;
 	
 protected:
 	bool GetNextRoom(FRoomInfo*& Output);

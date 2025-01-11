@@ -27,6 +27,9 @@ struct FConnectorPoint
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Connector")
 	ERoomConnectorType ConnectorType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Connector")
+	FVector2f RandomRotationOffsetRange = FVector2f(-8, 8);
+
 	UPROPERTY(BlueprintReadWrite, Category = "Connector")
 	ARoom* ConnectedRoom;
 

@@ -3,10 +3,39 @@
 #include "WorldGen/RoomsLevelGenerator.h"
 
 #include "BarkToLightLog.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "WorldGen/Connector.h"
 #include "WorldGen/Room.h"
 #include "WorldGen/RoomFactory.h"
 #include "WorldGen/RoomsLevelGeneratorSettings.h"
+
+class FBoundsChecker
+{
+public:
+	void AddBounds(const FBox& InBounds)
+	{
+		Bounds.Add(InBounds);
+	}
+
+	void AddBoundsArray(const TArray<FBox>& InBounds)
+	{
+		Bounds.Append(InBounds);
+	}
+
+	bool BoundsOverlapAnyBounds(const FBox& B) const
+	{
+		for (const FBox& Box : Bounds)
+		{
+			if (Box.Intersect(B))
+				return true;
+		}
+
+		return false;
+	}
+
+protected:
+	TArray<FBox> Bounds;
+};
 
 ARoomsLevelGenerator::ARoomsLevelGenerator()
 {
@@ -154,8 +183,9 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		Current->Actor->ConnectTo(CurrentRoomOutConnectorIndex, NewRoom, NewRoomInConnectorIndex);
 
 		// Update the child of the current room, and then update current to be our new room.
-		Current->Children[CurrentRoomOutConnectorIndex] = FRoomNode(NewRoom);
-		Current                                         = &Current->Children[CurrentRoomOutConnectorIndex];
+		Current->Children[CurrentRoomOutConnectorIndex]       = FRoomNode(NewRoom);
+		Current->Children[CurrentRoomOutConnectorIndex].Depth = Current->Depth + 1;
+		Current                                               = &Current->Children[CurrentRoomOutConnectorIndex];
 	}
 
 	// Now we want to populate our arrays and variables that the rest of the generation algorithm will use.
@@ -226,7 +256,8 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 		// Do the connection and update the children.
 		NodeToBranchFrom->Actor->ConnectTo(FromConnectorIndex, NewRoom, ToConnectorIndex);
-		NodeToBranchFrom->Children[FromConnectorIndex] = FRoomNode(NewRoom);
+		NodeToBranchFrom->Children[FromConnectorIndex]       = FRoomNode(NewRoom);
+		NodeToBranchFrom->Children[FromConnectorIndex].Depth = NodeToBranchFrom->Depth + 1;
 
 		// Update our arrays and variables.
 		TotalAvailableOutputs--;
@@ -246,6 +277,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	ToBeProcessed.Empty(); // Ensure our queue from earlier is empty.
 	CurrentNode = nullptr; // Reset our current node.
 	ToBeProcessed.Enqueue(&RootRoom);
+	FBoundsChecker BoundsChecker;
 	while (ToBeProcessed.Dequeue(CurrentNode))
 	{
 		// For each connector:
@@ -261,13 +293,52 @@ void ARoomsLevelGenerator::Generate_Implementation()
 				continue;
 
 			// Position the child correctly.
+			// First, let's get the transforms of the connectors.
 			int ChildConnectorIndex = CurrentNode->Actor->Connectors[i].ConnectedToIndex;
+			check(Child->Actor->Connectors[ChildConnectorIndex].ConnectedRoom == CurrentNode->Actor && Child->Actor->
+				Connectors[ChildConnectorIndex].ConnectedToIndex == i);
+			FTransform ConnectorTF = CurrentNode->Actor->Connectors[i].Offset * CurrentNode->Actor->GetTransform();
+			FTransform ChildTF = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
 
-			FTransform CurrentConnector = CurrentNode->Actor->GetTransform() +
-				CurrentNode->Actor->Connectors[i].Offset;
-			CurrentConnector.SetScale3D(FVector::OneVector);
+			// Draw some debug graphics to show the connectors.
+			if (bDrawDebug)
+			{
+				DrawDebugSphere(GetWorld(), ConnectorTF.GetLocation(), 50.0f, 12, FColor::Green, false, 10.0f);
+				DrawDebugString(GetWorld(), ConnectorTF.GetLocation() + FVector(0, 0, 100),
+				                FString::Printf(TEXT("%d"), CurrentNode->Depth), nullptr,
+				                FColor::Green, 10.0f, true);
+			}
 
-			Child->Actor->SetActorTransform(CurrentConnector);
+			// Find the rotation such that the forward vector of the child connector is opposite that of the parent connector, plus a random offset.
+			// This took so, so long to figure out - I need to learn more about quaternions.
+			FRotator CurrentRotator = ConnectorTF.Rotator().GetInverse();
+			FRotator ChildRotator   = ChildTF.Rotator();
+			FQuat    CurrentQuat    = FQuat(CurrentRotator);
+			FQuat    ChildQuat      = FQuat(ChildRotator);
+			FQuat    DeltaQuat      = CurrentQuat * ChildQuat.Inverse();
+			Child->Actor->SetActorRotation(
+				DeltaQuat.Rotator() + FRotator(0, FMath::RandRange(
+					                               CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange.X,
+					                               CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange.Y),
+				                               0) + Child->Actor->GetActorRotation());
+
+			// Set child's position such that the connectors are at the same location.
+			// First, recalculate the transform, as we've changed the rotation.
+			ChildTF               = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
+			FVector DeltaLocation = ConnectorTF.GetLocation() - ChildTF.GetLocation();
+			Child->Actor->SetActorLocation(Child->Actor->GetActorLocation() + DeltaLocation);
+
+			// Now that we have positioned the child, we can debug draw the new connector locations.
+			if (bDrawDebug)
+			{
+				ChildTF = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
+				DrawDebugSphere(GetWorld(), ChildTF.GetLocation(), 50.0f, 12, FColor::Red, false, 10.0f);
+				DrawDebugString(GetWorld(), ChildTF.GetLocation() + FVector(0, 0, 100),
+				                FString::Printf(TEXT("%d"), CurrentNode->Depth), nullptr,
+				                FColor::Red, 10.0f, true);
+			}
+
+			BoundsChecker.AddBounds(Child->Actor->GetComponentsBoundingBox());
 
 			ToBeProcessed.Enqueue(Child);
 		}
@@ -289,6 +360,9 @@ void ARoomsLevelGenerator::DestroyLevel()
 	for (auto Connector : GeneratedConnectors)
 		Connector->Destroy();
 	GeneratedConnectors.Empty();
+
+	Rooms.Empty();
+	LastSelectedRoom = nullptr;
 }
 
 bool ARoomsLevelGenerator::GetNextRoom(FRoomInfo*& Output)
