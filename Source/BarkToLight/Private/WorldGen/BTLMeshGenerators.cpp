@@ -121,7 +121,7 @@ void UBTLMeshGenerators::GenerateTreacheryWalkway(UDynamicMeshComponent* MeshCom
 	UDynamicMesh* Mesh = MeshComponent->GetDynamicMesh();
 	UGeometryScriptLibrary_MeshPolygroupFunctions::EnablePolygroups(Mesh);
 	UGeometryScriptLibrary_MeshMaterialFunctions::EnableMaterialIDs(Mesh);
-
+	
 	// Sample the spline to transforms so we can extrude the rectangle along it:
 	TArray<FTransform>                   Transforms;
 	TArray<double>                       FrameTimes; // Unused
@@ -161,6 +161,7 @@ void UBTLMeshGenerators::GenerateTreacheryWalkway(UDynamicMeshComponent* MeshCom
 	// so that we can apply a different material to them.
 	UDynamicMeshPool* Pool = UGeometryScriptLibrary_SceneUtilityFunctions::CreateDynamicMeshPool();
 	UDynamicMesh* SupportsMesh = Pool->RequestMesh(); // This should all be garbage collected when we're done with it.
+	UGeometryScriptLibrary_MeshMaterialFunctions::EnableMaterialIDs(SupportsMesh);
 
 	// Generate the supports.
 	FGeometryScriptPrimitiveOptions SupportOptions;

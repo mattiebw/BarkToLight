@@ -71,4 +71,5 @@ void ATreacheryConnector::Generate_Implementation()
 {
 	UBTLMeshGenerators::GenerateTreacheryWalkway(Mesh, Path, FVector2D(350, 800), 0.002, 2000, 200, 0.06,
 	                                             FMath::RandRange(0, 25000));
+	PostGenerate();
 }

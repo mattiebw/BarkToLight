@@ -20,6 +20,9 @@ public:
 
 	virtual void Generate_Implementation() override;
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Treachery Connector")
+	void PostGenerate();
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Treachery Connector")
 	UDynamicMeshComponent* Mesh;
