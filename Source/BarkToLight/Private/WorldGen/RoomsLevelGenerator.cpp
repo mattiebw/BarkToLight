@@ -3,39 +3,10 @@
 #include "WorldGen/RoomsLevelGenerator.h"
 
 #include "BarkToLightLog.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "WorldGen/Connector.h"
 #include "WorldGen/Room.h"
 #include "WorldGen/RoomFactory.h"
 #include "WorldGen/RoomsLevelGeneratorSettings.h"
-
-class FBoundsChecker
-{
-public:
-	void AddBounds(const FBox& InBounds)
-	{
-		Bounds.Add(InBounds);
-	}
-
-	void AddBoundsArray(const TArray<FBox>& InBounds)
-	{
-		Bounds.Append(InBounds);
-	}
-
-	bool BoundsOverlapAnyBounds(const FBox& B) const
-	{
-		for (const FBox& Box : Bounds)
-		{
-			if (Box.Intersect(B))
-				return true;
-		}
-
-		return false;
-	}
-
-protected:
-	TArray<FBox> Bounds;
-};
 
 ARoomsLevelGenerator::ARoomsLevelGenerator()
 {
@@ -150,6 +121,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		                            ->CreateRoom(NextRoomClass)
 		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                            ->Finish();
+		NewRoom->SetActorLocation(FVector(0, 0, RoomsSettings->MinimumRoomZ));
 		GeneratedRooms.Add(NewRoom);
 
 		if (Current == nullptr)
@@ -277,7 +249,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	ToBeProcessed.Empty(); // Ensure our queue from earlier is empty.
 	CurrentNode = nullptr; // Reset our current node.
 	ToBeProcessed.Enqueue(&RootRoom);
-	FBoundsChecker BoundsChecker;
+	UBoundsChecker* BoundsChecker = NewObject<UBoundsChecker>(this);
 	while (ToBeProcessed.Dequeue(CurrentNode))
 	{
 		// For each connector:
@@ -325,22 +297,23 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			// Find a position for the child that doesn't overlap with any other rooms.
 			// First, recalculate the transform, as we've changed the rotation.
 			ChildTF               = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
-			FBox ChildBounds = Child->Actor->GetComponentsBoundingBox();
+			FBox    ChildBounds   = Child->Actor->GetComponentsBoundingBox();
 			FVector DeltaLocation = ConnectorTF.GetLocation() - ChildTF.GetLocation();
-			FVector Direction = (Child->Actor->GetActorLocation() + DeltaLocation) - ConnectorTF.GetLocation();
+			FVector Direction     = (Child->Actor->GetActorLocation() + DeltaLocation) - ConnectorTF.GetLocation();
 			Child->Actor->SetActorLocation(Child->Actor->GetActorLocation() + DeltaLocation);
 			Direction.Normalize();
-			Direction.Z = FMath::RandRange(-0.1f, 0.1f);
-			float Magnitude = 500;
+			Direction.Z     = FMath::RandRange(-0.1f, 0.1f);
+			float Magnitude = 2000;
 			do
 			{
 				FVector TargetLoc = Child->Actor->GetActorLocation() + Direction * Magnitude;
-				TargetLoc.Z = FMath::Max(TargetLoc.Z, RoomsSettings->MinimumRoomY);
+				TargetLoc.Z       = FMath::Max(TargetLoc.Z, RoomsSettings->MinimumRoomZ);
 				Child->Actor->SetActorLocation(TargetLoc);
 				Magnitude += 500;
 				ChildBounds = Child->Actor->GetComponentsBoundingBox();
-			} while (BoundsChecker.BoundsOverlapAnyBounds(ChildBounds));
-			
+			}
+			while (BoundsChecker->BoundsOverlapAnyBounds(ChildBounds));
+
 			// Now that we have positioned the child, we can debug draw the new connector locations.
 			if (bDrawDebug)
 			{
@@ -351,7 +324,13 @@ void ARoomsLevelGenerator::Generate_Implementation()
 				                FColor::Red, 10.0f, true);
 			}
 
-			BoundsChecker.AddBounds(Child->Actor->GetComponentsBoundingBox());
+			BoundsChecker->AddBounds(Child->Actor->GetComponentsBoundingBox());
+
+			// Finally, generate the connector between the two rooms.
+			AConnector* Connector = GetWorld()->SpawnActor<AConnector>(RoomsSettings->ConnectorClass);
+			Connector->CreateSplineFromRooms(CurrentNode->Actor, i, Child->Actor, ChildConnectorIndex, BoundsChecker);
+			Connector->Generate_Implementation();
+			GeneratedConnectors.Add(Connector);
 
 			ToBeProcessed.Enqueue(Child);
 		}
@@ -360,6 +339,8 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	// Run post decorators
 
 	// Create player
+
+	BoundsChecker->ConditionalBeginDestroy();
 
 	double End = FPlatformTime::Seconds();
 	BTL_LOGC_NOLOC(GetWorld(), "Level generation took %f seconds.", End - Start);

@@ -14,6 +14,41 @@ class AConnector;
 class ARoom;
 class URoomsLevelGeneratorSettings;
 
+UCLASS()
+class UBoundsChecker : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Bounds Checker")
+	FORCEINLINE void AddBounds(const FBox& InBounds)
+	{
+		Bounds.Add(InBounds);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Bounds Checker")
+	FORCEINLINE void AddBoundsArray(const TArray<FBox>& InBounds)
+	{
+		Bounds.Append(InBounds);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Bounds Checker")
+	FORCEINLINE bool BoundsOverlapAnyBounds(const FBox& B) const
+	{
+		for (const FBox& Box : Bounds)
+		{
+			if (Box.Intersect(B))
+				return true;
+		}
+
+		return false;
+	}
+
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FBox> Bounds;
+};
+
 USTRUCT(BlueprintType)
 struct FRoomNode
 {

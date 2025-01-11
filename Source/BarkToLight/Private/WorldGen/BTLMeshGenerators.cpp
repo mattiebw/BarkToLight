@@ -132,10 +132,10 @@ void UBTLMeshGenerators::GenerateTreacheryWalkway(UDynamicMeshComponent* MeshCom
 
 	// Make our basic rectangle:
 	TArray<FVector2D> Polygon;
-	Polygon.Add(FVector2D(-0.5, 0) * Size); // 0 for the Y so it's flat on the ground
-	Polygon.Add(FVector2D(0.5, 0) * Size);
-	Polygon.Add(FVector2D(1.5, 1) * Size);
-	Polygon.Add(FVector2D(-1.5, 1) * Size); // Larger X for the higher Y so we give it some depth for visual interest.
+	Polygon.Add(FVector2D(-0.5, -1) * Size); // 0 for the Y so it's flat on the ground
+	Polygon.Add(FVector2D(0.5, -1) * Size);
+	Polygon.Add(FVector2D(1.5, 0) * Size);
+	Polygon.Add(FVector2D(-1.5, 0) * Size); // Larger X for the higher Y so we give it some depth for visual interest.
 
 	// Extrude it along the spline:
 	FGeometryScriptPrimitiveOptions PrimitiveOptions;
@@ -164,7 +164,7 @@ void UBTLMeshGenerators::GenerateTreacheryWalkway(UDynamicMeshComponent* MeshCom
 
 	// Generate the supports.
 	FGeometryScriptPrimitiveOptions SupportOptions;
-	float                           Time         = SupportEvery;
+	float                           Time         = SupportEvery / 2;
 	bool                            Side         = false; // Left is false, right is true.
 	float                           SplineLength = Spline->GetSplineLength();
 	while (Time < SplineLength)
@@ -175,7 +175,7 @@ void UBTLMeshGenerators::GenerateTreacheryWalkway(UDynamicMeshComponent* MeshCom
 			Side ? 1 : -1));
 
 		UGeometryScriptLibrary_MeshPrimitiveFunctions::AppendBox(SupportsMesh, SupportOptions,
-		                                                         FTransform(Position + FVector(0, 0, Size.Y / 2)), 100,
+		                                                         FTransform(Position - FVector(0, 0, Size.Y / 2)), 100,
 		                                                         100, 60000);
 
 		Side = !Side;
