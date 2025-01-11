@@ -331,6 +331,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			Connector->CreateSplineFromRooms(CurrentNode->Actor, i, Child->Actor, ChildConnectorIndex, BoundsChecker);
 			Connector->Generate_Implementation();
 			GeneratedConnectors.Add(Connector);
+			BoundsChecker->AddBounds(Connector->GetComponentsBoundingBox());
 
 			ToBeProcessed.Enqueue(Child);
 		}
@@ -397,7 +398,7 @@ bool ARoomsLevelGenerator::GetNextRoom(FRoomInfo*& Output)
 	else
 	{
 		BTL_LOGC_ERROR_NOLOC(GetWorld(), "Level generator failed to satisfy conditions - no valid rooms to place.");
-		// TODO: What do we do here?
+		// MW @todo: What do we do here?
 		// For now, lets return a random room from the main array.
 		// This is a temporary solution, and should be replaced with a more robust system.
 		Output = &RoomsSettings->Rooms[FMath::RandRange(0, Rooms.Num() - 1)];
