@@ -30,13 +30,13 @@ struct FConnectorPoint
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Connector")
 	FVector2f RandomRotationOffsetRange = FVector2f(-8, 8);
 
-	UPROPERTY(BlueprintReadWrite, Category = "Connector")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Connector")
 	ARoom* ConnectedRoom;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Connector")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Connector")
 	int ConnectedToIndex = -1;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Connector")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Connector")
 	bool bConnected = false;
 };
 

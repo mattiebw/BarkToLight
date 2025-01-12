@@ -32,6 +32,11 @@ void ATreacheryConnector::CreateSplineFromRooms_Implementation(ARoom* From, int 
 	Path->SetTangentAtSplinePoint(1, -ToConnectorTF.GetRotation().GetForwardVector() * 2000,
 	                              ESplineCoordinateSpace::World);
 
+	// if (FromConnectorTF.Rotator().Vector().Dot(ToConnectorTF.Rotator().Vector()) > 0)
+	// 	bIsValid = false;
+	if (Path->GetSplineLength() > 25000)
+		bIsValid = false;
+
 	return; // Comment this line to enable the test code for spline avoidance.
 	
 	int Index = 1;

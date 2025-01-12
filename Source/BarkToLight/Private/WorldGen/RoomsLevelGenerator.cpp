@@ -3,7 +3,9 @@
 #include "WorldGen/RoomsLevelGenerator.h"
 
 #include "BarkToLightLog.h"
+#include "Components/SplineComponent.h"
 #include "WorldGen/Connector.h"
+#include "WorldGen/LevelDecorator.h"
 #include "WorldGen/Room.h"
 #include "WorldGen/RoomFactory.h"
 #include "WorldGen/RoomsLevelGeneratorSettings.h"
@@ -83,8 +85,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	//    - TODO: Maybe we should move the decoration later.
 	// - Layout our room actors such that they don't overlap.
 	// - Create connectors between rooms.
-	// - Run our level decorators.
-	// - Done! Position the player.
+	// - Run our level decorators, including nav-mesh bounds generation and player start placement.
 
 	RemainingHotPathRooms = HotPathLength;
 	TArray<FRoomNode*> RoomsWithFreeOutwardConnectors;
@@ -283,36 +284,56 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 			// Find the rotation such that the forward vector of the child connector is opposite that of the parent connector, plus a random offset.
 			// This took so, so long to figure out - I need to learn more about quaternions.
-			FRotator CurrentRotator = ConnectorTF.Rotator().GetInverse();
-			FRotator ChildRotator   = ChildTF.Rotator();
-			FQuat    CurrentQuat    = FQuat(CurrentRotator);
-			FQuat    ChildQuat      = FQuat(ChildRotator);
-			FQuat    DeltaQuat      = CurrentQuat * ChildQuat.Inverse();
-			Child->Actor->SetActorRotation(
-				DeltaQuat.Rotator() + FRotator(0, FMath::RandRange(
-					                               CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange.X,
-					                               CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange.Y),
-				                               0) + Child->Actor->GetActorRotation());
+			FVector CurrentRotation = ConnectorTF.Rotator().RotateVector(FVector::ForwardVector);
+			FVector ChildRotation   = ChildTF.Rotator().RotateVector(FVector::ForwardVector);
+			FQuat   DeltaRotation   = FQuat::FindBetweenNormals(ChildRotation, -CurrentRotation);
+			Child->Actor->AddActorWorldRotation(DeltaRotation);
+			Child->Actor->AddActorWorldRotation(FRotator(0, FMath::RandRange(
+				                                             CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
+				                                             .X,
+				                                             CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
+				                                             .Y), 0));
 
 			// Find a position for the child that doesn't overlap with any other rooms.
 			// First, recalculate the transform, as we've changed the rotation.
-			ChildTF               = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
-			FBox    ChildBounds   = Child->Actor->GetComponentsBoundingBox();
-			FVector DeltaLocation = ConnectorTF.GetLocation() - ChildTF.GetLocation();
-			FVector Direction     = (Child->Actor->GetActorLocation() + DeltaLocation) - ConnectorTF.GetLocation();
-			Child->Actor->SetActorLocation(Child->Actor->GetActorLocation() + DeltaLocation);
-			Direction.Normalize();
-			Direction.Z     = FMath::RandRange(-0.1f, 0.1f);
-			float Magnitude = 2000;
-			do
+			// We'll use the direction of the connector to determine the direction we should move.
+			// Then, we'll move in that direction and 0, 30, and -30 degrees of yaw variation to try and find a free spot.
+			// We'll move the amount of units seperating the connectors, and if we can't find a free spot, we'll increase by 500 units.
+			// We'll do this iteration 20 times, and if we can't find a free spot, we'll just give up.
+			ChildTF = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
+			FTransform CurrentNodeTF = CurrentNode->Actor->GetTransform();
+			CurrentNodeTF.SetLocation(FVector());
+			FTransform ParentTF    = CurrentNode->Actor->Connectors[i].Offset * CurrentNodeTF;
+			FBox       ChildBounds = Child->Actor->GetComponentsBoundingBox();
+			FVector    Direction   = ParentTF.Rotator().RotateVector(FVector::ForwardVector);
+			FVector    LeftDir     = FRotator(0, 30, 0).RotateVector(Direction);
+			FVector    RightDir    = FRotator(0, -30, 0).RotateVector(Direction);
+			// Find the distance between the two connectors, and use that as the starting magnitude.
+			float   StartingMagnitude = (ChildTF.GetLocation() - ParentTF.GetLocation()).Size() * 1.2f;
+			FVector NewLocation;
+			for (int j = 1; j <= 20; j++)
 			{
-				FVector TargetLoc = Child->Actor->GetActorLocation() + Direction * Magnitude;
-				TargetLoc.Z       = FMath::Max(TargetLoc.Z, RoomsSettings->MinimumRoomZ);
-				Child->Actor->SetActorLocation(TargetLoc);
-				Magnitude += 500;
+				// If we were going -30, 0, 30, we could probably do this in a loop, but I want to go 0, 30, -30.
+				// We could make an array and iterate over that, but it's probably just easiest to just unroll the loop.
+
+				NewLocation = ConnectorTF.GetLocation() + Direction * (StartingMagnitude + (500 * j));
+				Child->Actor->SetActorLocation(NewLocation);
 				ChildBounds = Child->Actor->GetComponentsBoundingBox();
+				if (!BoundsChecker->BoundsOverlapAnyBounds(ChildBounds))
+					break;
+
+				NewLocation = ConnectorTF.GetLocation() + LeftDir * (StartingMagnitude + (500 * j));
+				Child->Actor->SetActorLocation(NewLocation);
+				ChildBounds = Child->Actor->GetComponentsBoundingBox();
+				if (!BoundsChecker->BoundsOverlapAnyBounds(ChildBounds))
+					break;
+
+				NewLocation = ConnectorTF.GetLocation() + RightDir * (StartingMagnitude + (500 * j));
+				Child->Actor->SetActorLocation(NewLocation);
+				ChildBounds = Child->Actor->GetComponentsBoundingBox();
+				if (!BoundsChecker->BoundsOverlapAnyBounds(ChildBounds))
+					break;
 			}
-			while (BoundsChecker->BoundsOverlapAnyBounds(ChildBounds));
 
 			// Now that we have positioned the child, we can debug draw the new connector locations.
 			if (bDrawDebug)
@@ -325,21 +346,35 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			}
 
 			BoundsChecker->AddBounds(Child->Actor->GetComponentsBoundingBox());
+			// Add the bounds of the child to the bounds checker, with some padding.
 
 			// Finally, generate the connector between the two rooms.
 			AConnector* Connector = GetWorld()->SpawnActor<AConnector>(RoomsSettings->ConnectorClass);
 			Connector->CreateSplineFromRooms(CurrentNode->Actor, i, Child->Actor, ChildConnectorIndex, BoundsChecker);
-			Connector->Generate_Implementation();
-			GeneratedConnectors.Add(Connector);
-			BoundsChecker->AddBounds(Connector->GetComponentsBoundingBox());
+			if (!Connector->IsValidConnector())
+				Connector->Destroy();
+			else
+			{
+				Connector->Generate_Implementation();
+				GeneratedConnectors.Add(Connector);
+				BoundsChecker->AddBounds(Connector->GetComponentsBoundingBox());
+			}
 
 			ToBeProcessed.Enqueue(Child);
 		}
 	}
 
 	// Run post decorators
+	for (auto LevelDec : RoomsSettings->LevelDecorators)
+	{
+		if (FMath::Rand() > LevelDec.Chance)
+			continue;
 
-	// Create player
+		ULevelDecorator* Decorator = NewObject<ULevelDecorator>(this, LevelDec.DecoratorClass);
+		Decorator->Level           = this;
+		Decorator->Decorate();
+		Decorator->ConditionalBeginDestroy();
+	}
 
 	BoundsChecker->ConditionalBeginDestroy();
 

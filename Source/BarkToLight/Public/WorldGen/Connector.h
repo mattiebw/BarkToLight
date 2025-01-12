@@ -24,7 +24,16 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Connector")
 	void CreateSplineFromRooms(ARoom* From, int FromIndex, ARoom* To, int ToIndex, UBoundsChecker* BoundsChecker);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Connector")
+	FORCEINLINE USplineComponent* GetPath() const { return Path; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Connector")
+	FORCEINLINE bool IsValidConnector() const { return bIsValid; }
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Connector")
 	USplineComponent* Path;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Connector")
+	bool bIsValid = true;
 };
