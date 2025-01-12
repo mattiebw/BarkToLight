@@ -9,8 +9,6 @@
 
 void ABTLPlayerController::OnPossess(APawn* InPawn)
 {
-	Super::OnPossess(InPawn);
-
 	BTLCharacter = Cast<ABTLPlayerCharacter>(InPawn);
 	if (!BTLCharacter)
 	{
@@ -18,6 +16,8 @@ void ABTLPlayerController::OnPossess(APawn* InPawn)
 		return;
 	}
 
+	// Setup our HUD BEFORE calling Super::OnPossess, as it is used in PossessedBy in the character.
+	
 	if (HUDWidgetClass)
 	{
 		HUDWidget = CreateWidget<UHUDWidget>(this, HUDWidgetClass);
@@ -25,5 +25,7 @@ void ABTLPlayerController::OnPossess(APawn* InPawn)
 		HUDWidget->AddToViewport();
 	}
 
+	Super::OnPossess(InPawn);
+	
 	PlayerCameraManager->SetFOV(110);
 }

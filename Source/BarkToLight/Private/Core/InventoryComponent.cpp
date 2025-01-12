@@ -41,3 +41,35 @@ void UInventoryComponent::GiveAmmo(FName AmmoType, int AmmoAmount)
 		AmmoInventory[AmmoType] += AmmoAmount;
 	}
 }
+
+bool UInventoryComponent::GiveWeapon(AWeapon* Weapon)
+{
+	for (int i = 0; i < Weapons.Num(); i++)
+	{
+		if (Weapons[i] == nullptr)
+		{
+			Weapons[i] = Weapon;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+TArray<AWeapon*> UInventoryComponent::SetWeaponSlots(int Slots)
+{
+	TArray<AWeapon*> Culled;
+
+	if (Slots < Weapons.Num())
+	{
+		for (int i = Slots; i < Weapons.Num(); i++)
+		{
+			Culled.Add(Weapons[i]);
+			Weapons[i] = nullptr;
+		}
+	}
+
+	Weapons.SetNum(Slots);
+
+	return Culled;
+}

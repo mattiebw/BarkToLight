@@ -10,22 +10,24 @@
 #include "Core/HealthComponent.h"
 #include "Core/PlayerStats.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Weapon/Weapon.h"
 
 ABTLPlayerCharacter::ABTLPlayerCharacter(const FObjectInitializer& FObjectInitializer)
 	: Super(FObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
+	HealthComponent    = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 }
 
 void ABTLPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	LastKnownValidLocation = GetActorLocation();
 	UseStats(Stats ? Stats : NewObject<UPlayerStats>(this));
+	SelectWeapon(0);
 }
 
 void ABTLPlayerCharacter::Tick(float DeltaTime)
@@ -37,7 +39,7 @@ void ABTLPlayerCharacter::Tick(float DeltaTime)
 	{
 		if (GetCharacterMovement()->IsMovingOnGround())
 		{
-			LastKnownValidLocation = PendingKnownValidLocation;
+			LastKnownValidLocation    = PendingKnownValidLocation;
 			PendingKnownValidLocation = GetActorLocation();
 		}
 		CurrentKnownLocationTimer = KnownLocationTimer;
@@ -49,10 +51,10 @@ void ABTLPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<
-			UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
@@ -71,24 +73,32 @@ void ABTLPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABTLPlayerCharacter::OnMove);
 
 		// Looking
-		EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &ABTLPlayerCharacter::OnLook);
+		EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this,
+		                                   &ABTLPlayerCharacter::OnLook);
 
 		// Primary Fire
-		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Triggered, this,
-		                                   &ABTLPlayerCharacter::OnPrimaryFire);
+		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Started, this,
+		                                   &ABTLPlayerCharacter::OnBeginPrimaryFire);
+		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Completed, this,
+		                                   &ABTLPlayerCharacter::OnEndPrimaryFire);
 
 		// Secondary Fire
 		EnhancedInputComponent->BindAction(SecondaryFireAction, ETriggerEvent::Triggered, this,
 		                                   &ABTLPlayerCharacter::OnSecondaryFire);
 
 		// Interact
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ABTLPlayerCharacter::OnInteract);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this,
+		                                   &ABTLPlayerCharacter::OnInteract);
 
 		// Crouch
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this,
 		                                   &ABTLPlayerCharacter::OnBeginCrouchInput);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this,
 		                                   &ABTLPlayerCharacter::OnEndCrouchInput);
+
+		// Select Weapon
+		EnhancedInputComponent->BindAction(SelectWeaponAction, ETriggerEvent::Triggered, this,
+		                                   &ABTLPlayerCharacter::OnSelectWeapon);
 	}
 	else
 	{
@@ -98,20 +108,38 @@ void ABTLPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	}
 }
 
+void ABTLPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	PlayerController = Cast<ABTLPlayerController>(NewController);
+	if (PlayerController == nullptr)
+	{
+		BTL_LOG_ERROR("Player character '%s' was possessed by a controller that is not a BTLPlayerController!",
+		              *GetName());
+		return;
+	}
+
+	PlayerController->GetHUDWidget()->OnWeaponSelected(InventoryComponent->GetWeapon(SelectedWeaponSlot));
+}
+
 void ABTLPlayerCharacter::UseStats(UPlayerStats* InStats)
 {
 	Stats = InStats;
 
-	HealthComponent->SetMaxHealth(Stats->Health);
-	HealthComponent->SetHealth(Stats->Health);
+	HealthComponent->SetMaxHealth(Stats->GetHealth());
+	HealthComponent->SetHealth(Stats->GetHealth());
 	Stats->OnHealthChanged.AddDynamic(HealthComponent, &UHealthComponent::SetMaxHealth);
 
-	GetMovementPtr()->MaxWalkSpeed = Stats->Speed;
+	GetMovementPtr()->MaxWalkSpeed = Stats->GetSpeed();
 	Stats->OnSpeedChanged.AddDynamic(this, &ABTLPlayerCharacter::OnSpeedChanged);
-	GetMovementPtr()->MaxWalkSpeedCrouched = Stats->Speed * Stats->CrouchSpeedMultiplier;
+	GetMovementPtr()->MaxWalkSpeedCrouched = Stats->GetSpeed() * Stats->GetCrouchSpeedMultiplier();
 	Stats->OnCrouchSpeedMultiplierChanged.AddDynamic(this, &ABTLPlayerCharacter::OnCrouchSpeedMultiplierChanged);
-	GetMovementPtr()->JumpZVelocity = Stats->JumpZ;
+	GetMovementPtr()->JumpZVelocity = Stats->GetJumpZ();
 	Stats->OnJumpZChanged.AddDynamic(this, &ABTLPlayerCharacter::OnJumpZChanged);
+
+	InventoryComponent->SetWeaponSlots(Stats->GetWeaponSlots());
+	Stats->OnWeaponSlotsChanged.AddDynamic(this, &ABTLPlayerCharacter::OnWeaponSlotsChanged);
 }
 
 // -----------------------------
@@ -124,13 +152,30 @@ void ABTLPlayerCharacter::OnSpeedChanged(float NewValue)
 
 void ABTLPlayerCharacter::OnCrouchSpeedMultiplierChanged(float NewValue)
 {
-	GetMovementPtr()->MaxWalkSpeedCrouched = Stats->Speed * NewValue;
+	GetMovementPtr()->MaxWalkSpeedCrouched = Stats->GetSpeed() * NewValue;
 }
 
 void ABTLPlayerCharacter::OnJumpZChanged(float NewValue)
 {
 	GetMovementPtr()->JumpZVelocity = NewValue;
 }
+
+void ABTLPlayerCharacter::OnWeaponSlotsChanged(float NewValue)
+{
+	if (SelectedWeaponSlot >= NewValue)
+	{
+		InventoryComponent->GetWeapon(SelectedWeaponSlot)->StopFiring();
+		SelectedWeaponSlot = 0;
+	}
+	
+	TArray<AWeapon*> Culled = InventoryComponent->SetWeaponSlots(NewValue);
+	for (AWeapon* Weapon : Culled)
+	{
+		// MW @todo: Drop the weapon
+		Weapon->Destroy();
+	}
+}
+
 // -----------------------------
 
 void ABTLPlayerCharacter::ReturnToLastKnownLocation(float TimeToWait, bool bDoDamage)
@@ -148,6 +193,23 @@ void ABTLPlayerCharacter::ReturnToLastKnownLocation(float TimeToWait, bool bDoDa
 			GetCharacterMovement()->Velocity = FVector::ZeroVector;
 			SetActorLocation(LastKnownValidLocation, false, nullptr, ETeleportType::ResetPhysics);
 		}, TimeToWait, false);
+	}
+}
+
+void ABTLPlayerCharacter::SelectWeapon(int Slot)
+{
+	BTL_LOG("Selecting weapon slot %f", Slot);
+	if (AWeapon* Weapon = InventoryComponent->GetWeapon(Slot))
+	{
+		if (bFiring)
+		{
+			InventoryComponent->GetWeapon(SelectedWeaponSlot)->StopFiring();
+			bFiring = false;
+		}
+		
+		// MW @todo: Equip
+		PlayerController->GetHUDWidget()->OnWeaponSelected(Weapon);
+		SelectedWeaponSlot = Slot;
 	}
 }
 
@@ -194,8 +256,20 @@ void ABTLPlayerCharacter::OnLook(const FInputActionValue& Value)
 	AddControllerPitchInput(LookDir.Y);
 }
 
-void ABTLPlayerCharacter::OnPrimaryFire(const FInputActionValue& Value)
+void ABTLPlayerCharacter::OnBeginPrimaryFire(const FInputActionValue& Value)
 {
+	if (AWeapon* Weapon = InventoryComponent->GetWeapon(SelectedWeaponSlot))
+	{
+		Weapon->Fire();
+	}
+}
+
+void ABTLPlayerCharacter::OnEndPrimaryFire(const FInputActionValue& Value)
+{
+	if (AWeapon* Weapon = InventoryComponent->GetWeapon(SelectedWeaponSlot))
+	{
+		Weapon->StopFiring();
+	}
 }
 
 void ABTLPlayerCharacter::OnSecondaryFire(const FInputActionValue& Value)
@@ -214,4 +288,10 @@ void ABTLPlayerCharacter::OnBeginCrouchInput()
 void ABTLPlayerCharacter::OnEndCrouchInput()
 {
 	UnCrouch();
+}
+
+void ABTLPlayerCharacter::OnSelectWeapon(const FInputActionValue& Value)
+{
+	float Slot = Value.Get<float>();
+	SelectWeapon(static_cast<int>(Slot - 1));
 }

@@ -36,10 +36,25 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "HUD")
 	void OnHealthChanged(float NewHealth, float HealthDifference);
 
+	UFUNCTION()
+	void OnAmmoUpdated(int NewAmmo);
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "HUD")
 	ABTLPlayerCharacter* Player;
 
 	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
 	UTextBlock* HealthText;
+
+	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
+	UWidget* AmmoContainer;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
+	UTextBlock* MainAmmoText;
+
+	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
+	UTextBlock* ReserveAmmoText;
+
+	UPROPERTY(BlueprintReadOnly)
+	AWeapon* SelectedWeapon;
 };

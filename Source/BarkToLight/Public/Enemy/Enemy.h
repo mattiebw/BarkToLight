@@ -24,6 +24,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	void InitialiseFromData(UEnemyData* InData);
 
+	UFUNCTION()
+	void OnMaxHealthChanged(float NewValue);
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Enemy")
 	FORCEINLINE UHealthComponent* GetHealthComponent() const { return HealthComponent; }
 

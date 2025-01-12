@@ -9,6 +9,8 @@
 
 class ABTLPlayerCharacter;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAmmoUpdated, int, NewAmmo);
+
 UCLASS()
 class BARKTOLIGHT_API AWeapon : public AActor
 {
@@ -19,6 +21,11 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon", meta = (WorldContext = "WorldContextObject"))
+	static AWeapon* CreateWeapon(UObject* WorldContextObject, UWeaponData* Data);
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void InitialiseFromData(UWeaponData* NewData);
 
@@ -27,6 +34,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Fire();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void StopFiring();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 	void PreOnFire();
@@ -34,8 +43,41 @@ public:
 	void OnFire();
 	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
 	void PostOnFire();
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
+	void OnStopFiring();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Weapon")
+	void OnDryFire();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Weapon")
+	bool CanFire() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void UseAmmo(int Amount);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+	FORCEINLINE int GetLoadedAmmo() const { return  LoadedAmmo; }
 	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+	FORCEINLINE int AmmoNeededToFillClip() const { return FMath::Max(0, Stats->GetClipSize() - LoadedAmmo); }
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE void GiveAmmo(int Amount) { LoadedAmmo = FMath::Min(Stats->GetClipSize(), LoadedAmmo + Amount); }
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void Reload(int GivenAmmo);
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<UWeaponStats> RequiredStatsClass = UWeaponStats::StaticClass();
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnAmmoUpdated OnAmmoUpdated;
+
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UStaticMeshComponent* Mesh;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	ABTLPlayerCharacter* OwningPlayer;
 	
@@ -44,4 +86,13 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	UWeaponStats* Stats;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	float LoadedAmmo = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	float ReloadTimeRemainingSeconds = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	int PendingAmmo = 0;
 };

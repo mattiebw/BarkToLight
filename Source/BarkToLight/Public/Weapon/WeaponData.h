@@ -39,6 +39,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	EAmmoUsageType AmmoUsageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	FName AmmoType;
 	
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Weapon")
 	UWeaponStats* DefaultStats;

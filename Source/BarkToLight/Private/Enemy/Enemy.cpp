@@ -37,10 +37,19 @@ void AEnemy::InitialiseFromData(UEnemyData* InData)
 	
 	Stats = DuplicateObject(Data->DefaultStats, this);
 
+	HealthComponent->SetMaxHealth(Stats->GetHealth());
+	HealthComponent->SetHealthPercentage(1);
+	Stats->OnHealthChanged.AddUniqueDynamic(this, &AEnemy::OnMaxHealthChanged);
+
 	if (IsPawnControlled())
 		GetController()->UnPossess();
 	AIControllerClass = Data->ControllerSubclass;
 	SpawnDefaultController();
 
 	bInitialised = true;
+}
+
+void AEnemy::OnMaxHealthChanged(float NewValue)
+{
+	HealthComponent->SetMaxHealth(NewValue);
 }

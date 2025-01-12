@@ -8,6 +8,7 @@
 #include "Character/PBPlayerCharacter.h"
 #include "BTLPlayerCharacter.generated.h"
 
+class ABTLPlayerController;
 class UPlayerStats;
 class UHealthComponent;
 struct FInputActionValue;
@@ -24,6 +25,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	// --- Player Stats ---
 	UFUNCTION(BlueprintCallable, Category = "Player")
@@ -34,6 +36,8 @@ public:
 	void OnCrouchSpeedMultiplierChanged(float NewValue);
 	UFUNCTION()
 	void OnJumpZChanged(float NewValue);
+	UFUNCTION()
+	void OnWeaponSlotsChanged(float NewValue);
 	// --------------------
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player")
@@ -46,6 +50,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player")
 	FORCEINLINE UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player")
+	FORCEINLINE UPlayerStats* GetStats() const { return Stats; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player")
+	FORCEINLINE ABTLPlayerController* GetPlayerController() const { return PlayerController; }
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void SelectWeapon(int Slot);
 
 	// --- IDamageSource ---
 	virtual AActor*           GetDamageSource_Implementation() override;
@@ -62,6 +75,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Player")
 	UPlayerStats* Stats;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	ABTLPlayerController* PlayerController;
 
 	/// --- Input Data and Functions ---
 	UFUNCTION()
@@ -73,7 +89,9 @@ protected:
 	UFUNCTION()
 	void OnLook(const FInputActionValue& Value);
 	UFUNCTION()
-	void OnPrimaryFire(const FInputActionValue& Value);
+	void OnBeginPrimaryFire(const FInputActionValue& Value);
+	UFUNCTION()
+	void OnEndPrimaryFire(const FInputActionValue& Value);
 	UFUNCTION()
 	void OnSecondaryFire(const FInputActionValue& Value);
 	UFUNCTION()
@@ -82,6 +100,8 @@ protected:
 	void OnBeginCrouchInput();
 	UFUNCTION()
 	void OnEndCrouchInput();
+	UFUNCTION()
+	void OnSelectWeapon(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* MoveAction = nullptr;
@@ -97,11 +117,19 @@ protected:
 	UInputAction* InteractAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* CrouchAction = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* SelectWeaponAction = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext = nullptr;
 	// --------------------------------
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	int SelectedWeaponSlot = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
+	bool bFiring = false;
+	
 	constexpr static float KnownLocationTimer = 0.25f;
 	// The last known valid (grounded) location of the player character. Set every KnownLocationTimer seconds.
 	// We can use this to return to a valid location if we fall of the map.
