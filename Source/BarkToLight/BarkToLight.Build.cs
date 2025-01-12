@@ -11,7 +11,7 @@ public class BarkToLight : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PBCharacterMovement", "UMG",
-			"GeometryScriptingCore", "GeometryFramework", "AIModule"
+			"GeometryScriptingCore", "GeometryFramework", "AIModule", "NavigationSystem"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

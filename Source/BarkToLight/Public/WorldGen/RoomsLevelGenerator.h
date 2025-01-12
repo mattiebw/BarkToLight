@@ -18,7 +18,7 @@ UCLASS()
 class UBoundsChecker : public UObject
 {
 	GENERATED_BODY()
-	
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Bounds Checker")
 	FORCEINLINE void AddBounds(const FBox& InBounds)
@@ -56,7 +56,7 @@ struct FRoomNode
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Room")
 	ARoom* Actor;
-	
+
 	// Blah, blueprints can't do struct recursion!
 	// If we wanted to expose this to blueprints, we'd have to make some helper methods.
 	// For now, we'll just force generators to be implemented in C++.
@@ -67,13 +67,13 @@ struct FRoomNode
 
 	FRoomNode()
 	{
-		Actor = nullptr;
+		Actor    = nullptr;
 		Children = TArray<FRoomNode>();
 	}
 
 	FRoomNode(ARoom* Room)
 	{
-		Actor = Room;
+		Actor    = Room;
 		Children = TArray<FRoomNode>();
 		Children.Init(FRoomNode(), Room->Connectors.Num());
 	}
@@ -94,6 +94,15 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Level Generator")
 	void DestroyLevel();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Level Generator")
+	FORCEINLINE TArray<ARoom*>& GetGeneratedRooms() { return GeneratedRooms; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Level Generator")
+	FORCEINLINE TArray<AConnector*>& GetGeneratedConnectors() { return GeneratedConnectors; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Level Generator")
+	FORCEINLINE TArray<AActor*>& GetOtherGeneratedActors() { return OtherGeneratedActors; }
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
 	FVector2f HotPathRoomCountRange = FVector2f(15, 25);
 
@@ -108,23 +117,25 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
 	bool bDrawDebug = false;
-	
+
 protected:
 	bool GetNextRoom(FRoomInfo*& Output);
-	
+
 	UPROPERTY(BlueprintReadOnly)
 	TArray<ARoom*> GeneratedRooms;
 	UPROPERTY(BlueprintReadOnly)
 	TArray<AConnector*> GeneratedConnectors;
+	UPROPERTY(BlueprintReadOnly)
+	TArray<AActor*> OtherGeneratedActors;
 
 	// Generator state
 	TArray<FRoomInfo> Rooms;
-	int RemainingHotPathRooms, RemainingRooms, TotalAvailableOutputs;
-	FRoomInfo* LastSelectedRoom;
+	int               RemainingHotPathRooms, RemainingRooms, TotalAvailableOutputs;
+	FRoomInfo*        LastSelectedRoom;
 
 	UPROPERTY(BlueprintReadOnly)
 	URoomFactory* RoomFactory;
-	
+
 	UPROPERTY(BlueprintReadWrite, Category = "Level Generator")
 	URoomsLevelGeneratorSettings* RoomsSettings;
 };

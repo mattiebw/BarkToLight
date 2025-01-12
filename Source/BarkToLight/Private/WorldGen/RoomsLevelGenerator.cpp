@@ -309,7 +309,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			FVector    LeftDir     = FRotator(0, 30, 0).RotateVector(Direction);
 			FVector    RightDir    = FRotator(0, -30, 0).RotateVector(Direction);
 			// Find the distance between the two connectors, and use that as the starting magnitude.
-			float   StartingMagnitude = (ChildTF.GetLocation() - ParentTF.GetLocation()).Size() * 1.2f;
+			float   StartingMagnitude = (ChildTF.GetLocation() - ParentTF.GetLocation()).Size() * 0.8f;
 			FVector NewLocation;
 			for (int j = 1; j <= 20; j++)
 			{
@@ -367,7 +367,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	// Run post decorators
 	for (auto LevelDec : RoomsSettings->LevelDecorators)
 	{
-		if (FMath::Rand() > LevelDec.Chance)
+		if (FMath::FRand() > LevelDec.Chance)
 			continue;
 
 		ULevelDecorator* Decorator = NewObject<ULevelDecorator>(this, LevelDec.DecoratorClass);
@@ -390,6 +390,9 @@ void ARoomsLevelGenerator::DestroyLevel()
 	for (auto Connector : GeneratedConnectors)
 		Connector->Destroy();
 	GeneratedConnectors.Empty();
+	for (auto Actor : OtherGeneratedActors)
+		Actor->Destroy();
+	OtherGeneratedActors.Empty();
 
 	Rooms.Empty();
 	LastSelectedRoom = nullptr;
