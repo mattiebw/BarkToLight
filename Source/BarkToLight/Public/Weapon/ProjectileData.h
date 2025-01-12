@@ -26,4 +26,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Weapon")
 	UProjectileStats* DefaultStats;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	bool bCanHurtPlayer = false;
 };

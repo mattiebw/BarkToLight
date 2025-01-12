@@ -8,6 +8,7 @@
 
 #include "Core/LayerData.h"
 #include "Enemy/EnemyData.h"
+#include "Weapon/ProjectileData.h"
 #include "Weapon/WeaponData.h"
 #include "WorldGen/RoomsLevelGeneratorSettings.h"
 
@@ -40,5 +41,6 @@ UCLASS() class UAssetDefinition_LayerData : public UAssetDefinitionDefault { GEN
 UCLASS() class UAssetDefinition_EnemyData : public UAssetDefinitionDefault { GENERATED_BODY() public: virtual FText GetAssetDisplayName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_""EnemyData","Enemy Data"); } virtual FLinearColor GetAssetColor() const override { return FLinearColor::Red; }; virtual TSoftClassPtr<UObject> GetAssetClass() const override { return UEnemyData::StaticClass(); } virtual TConstArrayView<FAssetCategoryPath> GetAssetCategories() const override { static const auto Categories = { EAssetCategoryPaths::Basic / LOCTEXT("BTLAssetSubMenu", "Bark To Light") }; return Categories; } };
 UCLASS() class UAssetDefinition_WeaponData : public UAssetDefinitionDefault { GENERATED_BODY() public: virtual FText GetAssetDisplayName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_""WeaponData","Weapon Data"); } virtual FLinearColor GetAssetColor() const override { return FLinearColor::Yellow; }; virtual TSoftClassPtr<UObject> GetAssetClass() const override { return UWeaponData::StaticClass(); } virtual TConstArrayView<FAssetCategoryPath> GetAssetCategories() const override { static const auto Categories = { EAssetCategoryPaths::Basic / LOCTEXT("BTLAssetSubMenu", "Bark To Light") }; return Categories; } };
 UCLASS() class UAssetDefinition_LevelGeneratorSettings : public UAssetDefinitionDefault { GENERATED_BODY() public: virtual FText GetAssetDisplayName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_""RoomsLevelGeneratorSettings","Rooms Level Generator Settings"); } virtual FLinearColor GetAssetColor() const override { return FLinearColor::Yellow; }; virtual TSoftClassPtr<UObject> GetAssetClass() const override { return URoomsLevelGeneratorSettings::StaticClass(); } virtual TConstArrayView<FAssetCategoryPath> GetAssetCategories() const override { static const auto Categories = { EAssetCategoryPaths::Basic / LOCTEXT("BTLAssetSubMenu", "Bark To Light") }; return Categories; } };
+UCLASS() class UAssetDefinition_ProjectileData : public UAssetDefinitionDefault { GENERATED_BODY() public: virtual FText GetAssetDisplayName() const override { return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_""ProjectileData","Projectile Data"); } virtual FLinearColor GetAssetColor() const override { return FLinearColor::Green; }; virtual TSoftClassPtr<UObject> GetAssetClass() const override { return UProjectileData::StaticClass(); } virtual TConstArrayView<FAssetCategoryPath> GetAssetCategories() const override { static const auto Categories = { EAssetCategoryPaths::Basic / LOCTEXT("BTLAssetSubMenu", "Bark To Light") }; return Categories; } };
 
 #undef LOCTEXT_NAMESPACE

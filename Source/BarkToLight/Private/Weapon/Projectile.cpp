@@ -2,6 +2,7 @@
 
 #include "Weapon/Projectile.h"
 
+#include "Core/BTLPlayerCharacter.h"
 #include "Enemy/Enemy.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Weapon/ProjectileData.h"
@@ -21,6 +22,9 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Data)
+		SetData(Data);
 }
 
 void AProjectile::SetData(UProjectileData* NewData)
@@ -28,15 +32,18 @@ void AProjectile::SetData(UProjectileData* NewData)
 	Data  = NewData;
 	Stats = DuplicateObject(Data->DefaultStats, this);
 
-	MovementComponent->InitialSpeed = Stats->GetInitialSpeed();
+	MovementComponent->InitialSpeed           = Stats->GetInitialSpeed();
+	MovementComponent->MaxSpeed               = MovementComponent->InitialSpeed;
+	MovementComponent->ProjectileGravityScale = 0;
+	MovementComponent->ProjectileGravityScale = 0;
+	MovementComponent->Friction               = 0;
 }
 
 void AProjectile::Fire(FVector Direction, float InDamage, UObject* InSource)
 {
-	MovementComponent->Velocity = Direction;
-	// Velocity is treated as a direction, as we have set MovementComponent->InitialSpeed.
-	Damage = InDamage;
-	Source = InSource;
+	MovementComponent->Velocity = Direction * Stats->GetInitialSpeed();
+	Damage                      = InDamage;
+	Source                      = InSource;
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -45,11 +52,33 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		OnHitEnemy(Enemy, Hit);
+		return;
 	}
-	else
+
+	ABTLPlayerCharacter* Player = Cast<ABTLPlayerCharacter>(OtherActor);
+	if (Player && Data->bCanHurtPlayer)
 	{
-		OnHitGeo(Hit);
+		Player->GetHealthComponent()->ReceiveDamageInstance(
+			FDamageInstance(Damage * Stats->GetDamageMultiplier(), Source, Data->Name.ToString()));
+		Destroy();
+		return;
 	}
+	
+	OnHitGeo(Hit);
+}
+
+AProjectile* AProjectile::CreateProjectile(UObject* WorldContextObject, UProjectileData* Data, FVector    Location,
+                                           FVector  Direction, float                     Damage, UObject* Source)
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (!World)
+		return nullptr;
+
+	AProjectile* Proj = World->SpawnActorDeferred<AProjectile>(Data->ProjectileSubclass, FTransform::Identity);
+	Proj->Data        = Data;
+	Proj->FinishSpawning(FTransform(Location));
+	Proj->Fire(Direction, Damage, Source);
+	return Proj;
 }
 
 void AProjectile::OnHitGeo_Implementation(const FHitResult& Hit)

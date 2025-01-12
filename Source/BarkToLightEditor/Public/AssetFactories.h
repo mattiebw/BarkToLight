@@ -31,7 +31,7 @@ class ULayerDataFactory : public UFactory
 
 public:
 	ULayerDataFactory();
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
+	virtual UObject* FactoryCreateNew(UClass*  Class, UObject*            InParent, FName Name, EObjectFlags Flags,
 	                                  UObject* Context, FFeedbackContext* Warn) override;
 };
 
@@ -42,7 +42,7 @@ class UEnemyDataFactory : public UFactory
 
 public:
 	UEnemyDataFactory();
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
+	virtual UObject* FactoryCreateNew(UClass*  Class, UObject*            InParent, FName Name, EObjectFlags Flags,
 	                                  UObject* Context, FFeedbackContext* Warn) override;
 };
 
@@ -53,7 +53,7 @@ class UWeaponDataFactory : public UFactory
 
 public:
 	UWeaponDataFactory();
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
+	virtual UObject* FactoryCreateNew(UClass*  Class, UObject*            InParent, FName Name, EObjectFlags Flags,
 	                                  UObject* Context, FFeedbackContext* Warn) override;
 };
 
@@ -64,6 +64,17 @@ class ULevelGeneratorSettingsFactory : public UFactory
 
 public:
 	ULevelGeneratorSettingsFactory();
-	virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
+	virtual UObject* FactoryCreateNew(UClass*  Class, UObject*            InParent, FName Name, EObjectFlags Flags,
+	                                  UObject* Context, FFeedbackContext* Warn) override;
+};
+
+UCLASS()
+class UProjectileDataFactory : public UFactory
+{
+	GENERATED_BODY()
+
+public:
+	UProjectileDataFactory();
+	virtual UObject* FactoryCreateNew(UClass*  Class, UObject*            InParent, FName Name, EObjectFlags Flags,
 	                                  UObject* Context, FFeedbackContext* Warn) override;
 };

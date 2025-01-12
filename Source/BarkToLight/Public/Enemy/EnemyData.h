@@ -26,6 +26,12 @@ public:
 	TSubclassOf<AEnemy> PawnSubclass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+	USkeletalMesh* Mesh;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+	TSubclassOf<UAnimationAsset> AnimationBP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TSubclassOf<AEnemyController> ControllerSubclass = AEnemyController::StaticClass();
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "Enemy")

@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Projectile")
 	void OnHitGeo(const FHitResult& Hit);
 
+	UFUNCTION(BlueprintCallable, Category = "Projectile", meta = (WorldContext = "WorldContextObject"))
+	static AProjectile* CreateProjectile(UObject* WorldContextObject, UProjectileData* Data, FVector Location, FVector Direction, float Damage, UObject* Source);
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	UStaticMeshComponent* MeshComponent;

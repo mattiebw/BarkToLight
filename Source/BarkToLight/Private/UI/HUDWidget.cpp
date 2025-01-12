@@ -64,7 +64,7 @@ void UHUDWidget::OnWeaponSelected_Implementation(AWeapon* Weapon)
 
 void UHUDWidget::OnHealthChanged_Implementation(float NewHealth, float HealthDifference)
 {
-	HealthText->SetText(FText::Format(FText::FromString("{0}"), NewHealth));
+	HealthText->SetText(FText::Format(FText::FromString("{0}"), (int)NewHealth));
 }
 
 void UHUDWidget::OnAmmoUpdated(int NewAmmo)
