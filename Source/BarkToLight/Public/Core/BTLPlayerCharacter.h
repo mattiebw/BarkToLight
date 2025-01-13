@@ -60,6 +60,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void SelectWeapon(int Slot);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player", meta = (MakeEditWidget))
+	FVector WeaponLocation;
+	
 	// --- IDamageSource ---
 	virtual AActor*           GetDamageSource_Implementation() override;
 	virtual FText             GetDamageSourceName_Implementation() const override;
@@ -133,7 +136,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	bool bFiring = false;
-	
+
 	constexpr static float KnownLocationTimer = 0.25f;
 	// The last known valid (grounded) location of the player character. Set every KnownLocationTimer seconds.
 	// We can use this to return to a valid location if we fall of the map.

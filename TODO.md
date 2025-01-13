@@ -1,6 +1,6 @@
 ## TODO
 
-- [ ] Enemy spawner generation
+- [x] Enemy spawner generation
 - [ ] Items system
 - [ ] Items equip UI
 - [ ] Weapons equip UI

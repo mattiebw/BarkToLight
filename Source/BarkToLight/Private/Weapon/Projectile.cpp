@@ -19,8 +19,10 @@ AProjectile::AProjectile()
 
 	MeshComponent->SetCanEverAffectNavigation(false);
 	MeshComponent->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);
+	MeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
 	MeshComponent->OnComponentHit.AddUniqueDynamic(this, &AProjectile::OnHit);
+	MeshComponent->OnComponentBeginOverlap.AddUniqueDynamic(this, &AProjectile::OnOverlap);
 }
 
 void AProjectile::BeginPlay()
@@ -53,22 +55,33 @@ void AProjectile::Fire(FVector Direction, float InDamage, UObject* InSource)
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                         FVector              NormalImpulse, const FHitResult& Hit)
 {
+	OnHitGeo(Hit);
+}
+
+void AProjectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
-		OnHitEnemy(Enemy, Hit);
+		OnHitEnemy(Enemy, SweepResult);
 		return;
 	}
 
 	ABTLPlayerCharacter* Player = Cast<ABTLPlayerCharacter>(OtherActor);
-	if (Player && Data->bCanHurtPlayer)
+	if (Player)
 	{
-		Player->GetHealthComponent()->ReceiveDamageInstance(
+		if (Data->bCanHurtPlayer)
+		{
+			Player->GetHealthComponent()->ReceiveDamageInstance(
 			FDamageInstance(Damage * Stats->GetDamageMultiplier(), Source, Data->Name.ToString()));
-		Destroy();
+			Destroy();
+			return;
+		}
+		
 		return;
 	}
 	
-	OnHitGeo(Hit);
+	OnHitGeo(SweepResult);
 }
 
 AProjectile* AProjectile::CreateProjectile(UObject* WorldContextObject, UProjectileData* Data, FVector    Location,

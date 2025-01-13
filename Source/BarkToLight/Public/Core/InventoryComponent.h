@@ -48,6 +48,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<AWeapon*> SetWeaponSlots(int Slots);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int GetFreeWeaponSlots();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	FORCEINLINE int GetWeaponSlots() { return Weapons.Num(); }
+
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryAmmoUpdated OnAmmoUpdated;
 

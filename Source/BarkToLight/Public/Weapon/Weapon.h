@@ -70,6 +70,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Reload(int GivenAmmo);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+	FORCEINLINE UWeaponStats* GetStats() { return Stats; }
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UWeaponStats> RequiredStatsClass = UWeaponStats::StaticClass();

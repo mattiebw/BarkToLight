@@ -3,6 +3,7 @@
 #include "AssetFactories.h"
 
 #include "Core/LayerData.h"
+#include "Core/Items/ItemAppearance.h"
 #include "Enemy/EnemyData.h"
 #include "Weapon/ProjectileData.h"
 #include "Weapon/WeaponData.h"
@@ -39,7 +40,7 @@ UObject* U##Type##Factory::FactoryCreateNew(UClass* Class, UObject* InParent, FN
 FString FactoryStatics::GetAssetNameWithoutPrefix(FString Name)
 {
 	TArray<FString> Sections;
-	const TCHAR     Sep = '_';
+	const TCHAR Sep = '_';
 	Name.ParseIntoArray(Sections, &Sep);
 	return Sections.Last();
 }
@@ -67,56 +68,56 @@ FString FactoryStatics::HumanizeString(FString Input)
 ULayerDataFactory::ULayerDataFactory()
 {
 	SupportedClass = ULayerData::StaticClass();
-	bEditAfterNew  = true;
-	bCreateNew     = true;
+	bEditAfterNew = true;
+	bCreateNew = true;
 }
 
-UObject* ULayerDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, FName Name, EObjectFlags Flags,
+UObject* ULayerDataFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
                                              UObject* Context, FFeedbackContext* Warn)
 {
 	const auto Obj = NewObject<ULayerData>(InParent, Class, Name, Flags, Context);
-	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	Obj->Name = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
 	return Obj;
 };
 
 UEnemyDataFactory::UEnemyDataFactory()
 {
 	SupportedClass = UEnemyData::StaticClass();
-	bEditAfterNew  = true;
-	bCreateNew     = true;
+	bEditAfterNew = true;
+	bCreateNew = true;
 }
 
-UObject* UEnemyDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, FName Name, EObjectFlags Flags,
+UObject* UEnemyDataFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
                                              UObject* Context, FFeedbackContext* Warn)
 {
 	const auto Obj = NewObject<UEnemyData>(InParent, Class, Name, Flags, Context);
-	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	Obj->Name = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
 	return Obj;
 };
 
 UWeaponDataFactory::UWeaponDataFactory()
 {
 	SupportedClass = UWeaponData::StaticClass();
-	bEditAfterNew  = true;
-	bCreateNew     = true;
+	bEditAfterNew = true;
+	bCreateNew = true;
 }
 
-UObject* UWeaponDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, FName Name, EObjectFlags Flags,
+UObject* UWeaponDataFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
                                               UObject* Context, FFeedbackContext* Warn)
 {
 	const auto Obj = NewObject<UWeaponData>(InParent, Class, Name, Flags, Context);
-	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	Obj->Name = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
 	return Obj;
 };
 
 ULevelGeneratorSettingsFactory::ULevelGeneratorSettingsFactory()
 {
 	SupportedClass = URoomsLevelGeneratorSettings::StaticClass();
-	bEditAfterNew  = true;
-	bCreateNew     = true;
+	bEditAfterNew = true;
+	bCreateNew = true;
 }
 
-UObject* ULevelGeneratorSettingsFactory::FactoryCreateNew(UClass*      Class, UObject* InParent, FName            Name,
+UObject* ULevelGeneratorSettingsFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name,
                                                           EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
 {
 	return NewObject<URoomsLevelGeneratorSettings>(InParent, Class, Name, Flags, Context);
@@ -125,14 +126,29 @@ UObject* ULevelGeneratorSettingsFactory::FactoryCreateNew(UClass*      Class, UO
 UProjectileDataFactory::UProjectileDataFactory()
 {
 	SupportedClass = UProjectileData::StaticClass();
-	bEditAfterNew  = true;
-	bCreateNew     = true;
+	bEditAfterNew = true;
+	bCreateNew = true;
 }
 
-UObject* UProjectileDataFactory::FactoryCreateNew(UClass*  Class, UObject* InParent, FName Name, EObjectFlags Flags,
+UObject* UProjectileDataFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
                                                   UObject* Context, FFeedbackContext* Warn)
 {
 	const auto Obj = NewObject<UProjectileData>(InParent, Class, Name, Flags, Context);
-	Obj->Name      = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	Obj->Name = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
 	return Obj;
 };
+
+UItemAppearanceFactory::UItemAppearanceFactory()
+{
+	SupportedClass = UItemAppearance::StaticClass();
+	bEditAfterNew = true;
+	bCreateNew = true;
+}
+
+UObject* UItemAppearanceFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags,
+                                                  UObject* Context, FFeedbackContext* Warn)
+{
+	const auto Obj = NewObject<UItemAppearance>(InParent, Class, Name, Flags, Context);
+	Obj->Name = FText::FromString(FactoryStatics::HumanizeString(Name.ToString()));
+	return Obj;
+}

@@ -3,6 +3,7 @@
 #include "Weapon/Weapon.h"
 
 #include "BarkToLightLog.h"
+#include "Core/BTLPlayerCharacter.h"
 
 AWeapon::AWeapon()
 {
@@ -23,7 +24,12 @@ void AWeapon::BeginPlay()
 void AWeapon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	
+	if (OwningPlayer)
+	{
+		SetActorLocation(OwningPlayer->GetActorLocation() + (OwningPlayer->GetBaseAimRotation().RotateVector(OwningPlayer->WeaponLocation)));
+	}
+	
 	if (ReloadTimeRemainingSeconds > 0)
 	{
 		ReloadTimeRemainingSeconds = FMath::Max(0.0f, ReloadTimeRemainingSeconds - DeltaSeconds);

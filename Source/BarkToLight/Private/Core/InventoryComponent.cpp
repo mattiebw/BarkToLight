@@ -76,3 +76,14 @@ TArray<AWeapon*> UInventoryComponent::SetWeaponSlots(int Slots)
 
 	return Culled;
 }
+
+int UInventoryComponent::GetFreeWeaponSlots()
+{
+	int FreeSlots = 0;
+	for (int i = 0; i < Weapons.Num(); i++)
+	{
+		if (Weapons[i] == nullptr)
+			FreeSlots++;
+	}
+	return FreeSlots;
+}

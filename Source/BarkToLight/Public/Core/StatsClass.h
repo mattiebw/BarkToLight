@@ -46,6 +46,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat Upgrade")
 	float Value = 1;
+
+	int Handle = 0;
 };
 
 /**
@@ -58,7 +60,10 @@ class BARKTOLIGHT_API UStatsClass : public UObject
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Stats")
-	void AddUpgrade(const FStatUpgrade& Upgrade);
+	int AddUpgrade(const FStatUpgrade& Upgrade);
+
+	UFUNCTION(BlueprintCallable, Category = "Stats")
+	bool RemoveUpgrade(int Handle);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Stats")
 	float GetValue(FName StatName) const;

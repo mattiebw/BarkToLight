@@ -4,17 +4,34 @@
 
 #include "BarkToLightLog.h"
 
-void UStatsClass::AddUpgrade(const FStatUpgrade& Upgrade)
+int UStatsClass::AddUpgrade(const FStatUpgrade& Upgrade)
 {
-	StatUpgrades.Push(Upgrade);
+	FStatUpgrade NewUpgrade = Upgrade;
+	NewUpgrade.Handle = FMath::Rand();
+	StatUpgrades.Add(NewUpgrade);
 	FProperty* Property = GetClass()->FindPropertyByName(Upgrade.StatName);
 	if (Property == nullptr)
 	{
 		BTL_LOGC_ERROR(GetWorld(), "In StatsClass %s, property %s does not exist", *GetName(), *Upgrade.StatName.ToString());
-		return;
+		return -1;
 	}
 
 	Property->CallSetter(this, &Upgrade.Value);
+	return NewUpgrade.Handle;
+}
+
+bool UStatsClass::RemoveUpgrade(int Handle)
+{
+	for (int i = 0; i < StatUpgrades.Num(); i++)
+	{
+		if (StatUpgrades[i].Handle == Handle)
+		{
+			StatUpgrades.RemoveAt(i);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 float UStatsClass::GetValue(FName StatName) const
