@@ -90,7 +90,8 @@ void ARoomsLevelGenerator::Generate_Implementation()
 	RemainingHotPathRooms = HotPathLength;
 	TArray<FRoomNode*> RoomsWithFreeOutwardConnectors;
 	FRoomNode *        Current = nullptr, *Prev = nullptr;
-
+	float Difficulty = 0;
+	
 	while (RemainingHotPathRooms > 0)
 	{
 		// Lets decrement the remaining hot path rooms now, so we don't forget.
@@ -117,9 +118,17 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			NextRoomClass = NextRoomInfo->RoomClass;
 		}
 
+		if (Current == nullptr)
+			Difficulty = 0; // Root room. No difficulty.
+		else if (Current != nullptr && Difficulty == 0)
+			Difficulty = BaseDifficulty; // First room with difficulty. Use base difficulty.
+		else
+			Difficulty += FMath::FRandRange(DifficultyIncreasePerRoomRange.X, DifficultyIncreasePerRoomRange.Y);
+
 		// Create the new room using our factory.
 		ARoom* NewRoom = RoomFactory->Reset()
 		                            ->CreateRoom(NextRoomClass)
+									->SetDifficulty(Difficulty)
 		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                            ->Finish();
 		NewRoom->SetActorLocation(FVector(0, 0, RoomsSettings->MinimumRoomZ));
@@ -208,6 +217,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 		ARoom* NewRoom = RoomFactory->Reset()
 		                            ->CreateRoom(NextRoomInfo->RoomClass)
+									->SetDifficulty(NodeToBranchFrom->Actor->Difficulty + FMath::FRandRange(DifficultyIncreasePerRoomRange.X, DifficultyIncreasePerRoomRange.Y))
 		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                            ->Finish();
 		GeneratedRooms.Add(NewRoom);
@@ -289,10 +299,14 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			FQuat   DeltaRotation   = FQuat::FindBetweenNormals(ChildRotation, -CurrentRotation);
 			Child->Actor->AddActorWorldRotation(DeltaRotation);
 			Child->Actor->AddActorWorldRotation(FRotator(0, FMath::RandRange(
-				                                             CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
-				                                             .X,
-				                                             CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
-				                                             .Y), 0));
+															 CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
+															 .X,
+															 CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
+															 .Y), 0));
+			for (AActor* Part : Child->Actor->Parts)
+			{
+				Part->AddActorWorldRotation(DeltaRotation);
+			}
 
 			// Find a position for the child that doesn't overlap with any other rooms.
 			// First, recalculate the transform, as we've changed the rotation.
@@ -311,6 +325,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			// Find the distance between the two connectors, and use that as the starting magnitude.
 			float   StartingMagnitude = (ChildTF.GetLocation() - ParentTF.GetLocation()).Size() * 0.8f;
 			FVector NewLocation;
+			FVector OrigLocation = Child->Actor->GetActorLocation();
 			for (int j = 1; j <= 20; j++)
 			{
 				// If we were going -30, 0, 30, we could probably do this in a loop, but I want to go 0, 30, -30.
@@ -334,6 +349,9 @@ void ARoomsLevelGenerator::Generate_Implementation()
 				if (!BoundsChecker->BoundsOverlapAnyBounds(ChildBounds))
 					break;
 			}
+			FVector Diff = Child->Actor->GetActorLocation() - OrigLocation;
+			for (AActor* Part : Child->Actor->Parts)
+				Part->AddActorWorldOffset(Diff);
 
 			// Now that we have positioned the child, we can debug draw the new connector locations.
 			if (bDrawDebug)

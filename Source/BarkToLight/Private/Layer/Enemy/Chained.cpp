@@ -17,6 +17,8 @@ void AChained::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AddActorWorldOffset(FVector(0, 0, 500));
+
 	PlayerCharacter = Cast<ABTLPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
 
 	HealthComponent->OnHealthChanged.AddUniqueDynamic(this, &AChained::OnHealthChanged);

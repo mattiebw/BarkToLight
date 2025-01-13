@@ -6,20 +6,25 @@
 #include "Engine/TriggerBox.h"
 #include "EnemyEncounterVolume.generated.h"
 
+class UEnemyData;
+
 UCLASS()
 class BARKTOLIGHT_API AEnemyEncounterVolume : public ATriggerBox
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AEnemyEncounterVolume();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UFUNCTION()
+	void OnOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UFUNCTION(BlueprintCallable, Category = "Enemy Encounter")
+	void SetCenterAndExtent(FVector NewCenter, FVector NewExtent);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Enemy Encounter")
+	FBox GetBox();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy Encounter")
+	TMap<UEnemyData*, int> Spawns;
 };

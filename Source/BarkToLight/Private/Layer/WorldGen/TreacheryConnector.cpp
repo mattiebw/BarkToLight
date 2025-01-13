@@ -38,8 +38,7 @@ void ATreacheryConnector::CreateSplineFromRooms_Implementation(ARoom* From, int 
 	if (Path->GetSplineLength() > 25000)
 		bIsValid = false;
 
-	return; // Comment this line to enable the test code for spline avoidance.
-
+#if 0
 	int Index = 1;
 	for (float Time = 0.2f; Time < 0.8f; Time += 0.02f)
 	{
@@ -71,6 +70,9 @@ void ATreacheryConnector::CreateSplineFromRooms_Implementation(ARoom* From, int 
 		Path->AddSplinePointAtIndex(Location, Index, ESplineCoordinateSpace::World);
 		Index++;
 	}
+#endif
+	
+	return; // Comment this line to enable the test code for spline avoidance.
 }
 
 void ATreacheryConnector::Generate_Implementation()

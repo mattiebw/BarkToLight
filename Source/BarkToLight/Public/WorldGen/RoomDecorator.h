@@ -13,7 +13,7 @@ class ARoom;
  * They can be derived from to create custom decorators - for example, a "MonsterDecorator" that
  * creates the enemy encounters for a room, or something that simply adds some visual flair.
  */
-UCLASS(Abstract)
+UCLASS(Abstract, Blueprintable)
 class BARKTOLIGHT_API URoomDecorator : public UObject
 {
 	GENERATED_BODY()

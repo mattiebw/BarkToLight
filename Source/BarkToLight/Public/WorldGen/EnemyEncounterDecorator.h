@@ -8,7 +8,7 @@
 
 class UEnemyData;
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FEnemyType
 {
 	GENERATED_BODY()
@@ -21,6 +21,9 @@ struct FEnemyType
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	float DifficultyCost;
+
+	float MinRoll = 0;
+	float MaxRoll = 0;
 };
 
 /**

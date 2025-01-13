@@ -1,26 +1,64 @@
 ﻿// copyright lolol
 
-
 #include "Enemy/EnemyEncounterVolume.h"
 
+#include "Components/BoxComponent.h"
+#include "Core/BTLPlayerCharacter.h"
+#include "Enemy/Enemy.h"
 
-// Sets default values
 AEnemyEncounterVolume::AEnemyEncounterVolume()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+
+	OnActorBeginOverlap.AddUniqueDynamic(this, &AEnemyEncounterVolume::OnOverlap);
 }
 
-// Called when the game starts or when spawned
-void AEnemyEncounterVolume::BeginPlay()
+void AEnemyEncounterVolume::OnOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-	Super::BeginPlay();
-	
+	if (!OtherActor->IsA<ABTLPlayerCharacter>())
+		return;
+
+	UBoxComponent* BoxComponent = Cast<UBoxComponent>(GetCollisionComponent());
+	FVector CenterLocation = BoxComponent->GetComponentLocation();
+	FVector Extents = BoxComponent->GetScaledBoxExtent();
+
+	for (TTuple<UEnemyData*, int>& Spawn : Spawns)
+	{
+		for (int i = 0; i < Spawn.Value; i++)
+		{
+			FVector SpawnLocation = CenterLocation;
+			FHitResult Hit;
+			int Tries = 100;
+			do
+			{
+				SpawnLocation = CenterLocation;
+				SpawnLocation.X += FMath::FRandRange(-Extents.X, Extents.X);
+				SpawnLocation.Y += FMath::FRandRange(-Extents.Y, Extents.Y);
+			
+				GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, SpawnLocation - FVector(0, 0, Extents.Z), ECC_WorldStatic);
+				SpawnLocation = Hit.Location;
+
+				Tries--;
+			}
+			while (!Hit.bBlockingHit && Tries > 0);
+
+			AEnemy::CreateEnemy(this, SpawnLocation, Spawn.Key);
+		}
+	}
+
+	Destroy();
 }
 
-// Called every frame
-void AEnemyEncounterVolume::Tick(float DeltaTime)
+void AEnemyEncounterVolume::SetCenterAndExtent(FVector NewCenter, FVector NewExtent)
 {
-	Super::Tick(DeltaTime);
+	UBoxComponent* BoxComponent = Cast<UBoxComponent>(GetCollisionComponent());
+	BoxComponent->SetBoxExtent(NewExtent);
+	BoxComponent->SetWorldLocation(NewCenter);
 }
 
+FBox AEnemyEncounterVolume::GetBox()
+{
+	UBoxComponent* BoxComponent = Cast<UBoxComponent>(GetCollisionComponent());
+	FVector Center = BoxComponent->GetComponentLocation();
+	return FBox(Center - BoxComponent->GetScaledBoxExtent() / 2, Center + BoxComponent->GetScaledBoxExtent() / 2);
+}

@@ -36,6 +36,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Enemy")
 	FORCEINLINE UHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy", meta = (WorldContext = "WorldContextObject"))
+	static AEnemy* CreateEnemy(UObject* WorldContextObject, FVector Location, UEnemyData* Data);
 	
 	// --- IDamageSource ---
 	virtual AActor*           GetDamageSource_Implementation() override;

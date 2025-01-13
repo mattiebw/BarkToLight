@@ -75,6 +75,27 @@ void AEnemy::OnMaxHealthChanged(float NewValue)
 	HealthComponent->SetMaxHealth(NewValue);
 }
 
+AEnemy* AEnemy::CreateEnemy(UObject* WorldContextObject, FVector Location, UEnemyData* Data)
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (!World)
+		return nullptr;
+
+	if (!Data)
+	{
+		BTL_LOGC_ERROR(World, "Null data in AEnemy::CreateEnemy()!");
+		return nullptr;
+	}
+	
+	AEnemy* Enemy = World->SpawnActorDeferred<AEnemy>(Data->PawnSubclass, FTransform::Identity);
+	Enemy->Data = Data;
+	FVector Center, Extents;
+	Enemy->GetActorBounds(false, Center, Extents);
+	Enemy->FinishSpawning(FTransform(Location + FVector(0, 0, Extents.Z / 2)));
+
+	return Enemy;
+}
+
 AActor* AEnemy::GetDamageSource_Implementation()
 {
 	return this;

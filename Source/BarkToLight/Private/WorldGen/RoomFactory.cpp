@@ -51,6 +51,12 @@ URoomFactory* URoomFactory::AddDecoratorsFromInfos(TArray<FRoomDecoratorInfo> De
 	return this;
 }
 
+URoomFactory* URoomFactory::SetDifficulty(float Value)
+{
+	Room->Difficulty = Value;
+	return this;
+}
+
 URoomFactory* URoomFactory::Reset()
 {
 	Room = nullptr;

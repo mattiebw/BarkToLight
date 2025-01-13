@@ -109,6 +109,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
 	FVector2f TotalRoomCountRange = FVector2f(30, 40);
 
+	float BaseDifficulty = 15.f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generator")
 	FVector2f DifficultyIncreasePerRoomRange = FVector2f(-10, 50);
 

@@ -30,6 +30,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Room Factory")
 	URoomFactory* AddDecoratorsFromInfos(TArray<FRoomDecoratorInfo> Decorators);
+
+	UFUNCTION(BlueprintCallable, Category = "Room Factory")
+	URoomFactory* SetDifficulty(float Value);
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Room Factory")
 	FORCEINLINE ARoom* GetRoom() const { return Room; }
