@@ -3,7 +3,9 @@
 #include "Enemy/Enemy.h"
 
 #include "BarkToLightLog.h"
+#include "Core/BTLPlayerCharacter.h"
 #include "Enemy/EnemyData.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AEnemy::AEnemy()
 {
@@ -32,6 +34,11 @@ void AEnemy::OnDeath_Implementation(const FDamageInstance& DamageInstance)
 	Destroy();
 }
 
+void AEnemy::OnSpeedChanged(float NewValue)
+{
+	GetCharacterMovement()->MaxWalkSpeed = NewValue;
+}
+
 void AEnemy::InitialiseFromData(UEnemyData* InData)
 {
 	Data = InData;
@@ -51,6 +58,9 @@ void AEnemy::InitialiseFromData(UEnemyData* InData)
 	HealthComponent->SetMaxHealth(Stats->GetHealth());
 	HealthComponent->SetHealthPercentage(1);
 	Stats->OnHealthChanged.AddUniqueDynamic(this, &AEnemy::OnMaxHealthChanged);
+
+	GetCharacterMovement()->MaxWalkSpeed = Stats->GetSpeed();
+	Stats->OnSpeedChanged.AddDynamic(this, &AEnemy::OnSpeedChanged);
 
 	if (IsPawnControlled())
 		GetController()->UnPossess();

@@ -29,8 +29,9 @@ void AWeapon::Tick(float DeltaSeconds)
 		ReloadTimeRemainingSeconds = FMath::Max(0.0f, ReloadTimeRemainingSeconds - DeltaSeconds);
 		if (ReloadTimeRemainingSeconds == 0)
 		{
-			LoadedAmmo += PendingAmmo;
+			LoadedAmmo = FMath::Min(Stats->GetClipSize(), LoadedAmmo + PendingAmmo);
 			PendingAmmo = 0;
+			OnAmmoUpdated.Broadcast(LoadedAmmo);
 		}
 	}
 }

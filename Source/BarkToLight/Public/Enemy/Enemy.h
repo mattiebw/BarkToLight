@@ -25,6 +25,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Enemy")
 	void OnDeath(const FDamageInstance& DamageInstance);
 
+	UFUNCTION()
+	void OnSpeedChanged(float NewValue);
+	
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	void InitialiseFromData(UEnemyData* InData);
 

@@ -99,6 +99,10 @@ void ABTLPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		// Select Weapon
 		EnhancedInputComponent->BindAction(SelectWeaponAction, ETriggerEvent::Triggered, this,
 		                                   &ABTLPlayerCharacter::OnSelectWeapon);
+		
+		// Reload
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this,
+										   &ABTLPlayerCharacter::OnReload);
 	}
 	else
 	{
@@ -201,6 +205,8 @@ void ABTLPlayerCharacter::SelectWeapon(int Slot)
 	BTL_LOG("Selecting weapon slot %f", Slot);
 	if (AWeapon* Weapon = InventoryComponent->GetWeapon(Slot))
 	{
+		Weapon->OwningPlayer = this;
+		
 		if (bFiring)
 		{
 			InventoryComponent->GetWeapon(SelectedWeaponSlot)->StopFiring();
@@ -294,4 +300,22 @@ void ABTLPlayerCharacter::OnSelectWeapon(const FInputActionValue& Value)
 {
 	float Slot = Value.Get<float>();
 	SelectWeapon(static_cast<int>(Slot - 1));
+}
+
+void ABTLPlayerCharacter::OnReload()
+{
+	AWeapon* Weapon = InventoryComponent->GetWeapon(SelectedWeaponSlot);
+	if (!Weapon)
+		return;
+
+	if (Weapon->IsReloading())
+		return;
+	int AmmoNeeded = Weapon->AmmoNeededToFillClip();
+	if (AmmoNeeded <= 0)
+		return;
+	int AmmoObtained = InventoryComponent->TakeAmmo(Weapon->GetData()->AmmoType, AmmoNeeded);
+	if (AmmoObtained > 0)
+	{
+		Weapon->Reload(AmmoObtained);
+	}
 }

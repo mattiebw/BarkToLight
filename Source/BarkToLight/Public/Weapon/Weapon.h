@@ -65,12 +65,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FORCEINLINE void GiveAmmo(int Amount) { LoadedAmmo = FMath::Min(Stats->GetClipSize(), LoadedAmmo + Amount); }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon")
+	FORCEINLINE bool IsReloading() const { return ReloadTimeRemainingSeconds > 0; }
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Reload(int GivenAmmo);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UWeaponStats> RequiredStatsClass = UWeaponStats::StaticClass();
 
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapon")
+	ABTLPlayerCharacter* OwningPlayer;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Weapon")
 	FOnAmmoUpdated OnAmmoUpdated;
 
@@ -78,21 +84,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	UStaticMeshComponent* Mesh;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	ABTLPlayerCharacter* OwningPlayer;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	UWeaponData* Data;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapon")
 	UWeaponStats* Stats;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapon")
 	float LoadedAmmo = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapon")
 	float ReloadTimeRemainingSeconds = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapon")
 	int PendingAmmo = 0;
 };

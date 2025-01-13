@@ -8,6 +8,8 @@
 
 class AWeapon;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryAmmoUpdated, FName, AmmoType, int, NewAmmo);
+
 UCLASS(ClassGroup=(BTL), meta=(BlueprintSpawnableComponent))
 class BARKTOLIGHT_API UInventoryComponent : public UActorComponent
 {
@@ -45,6 +47,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<AWeapon*> SetWeaponSlots(int Slots);
+
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryAmmoUpdated OnAmmoUpdated;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Inventory")

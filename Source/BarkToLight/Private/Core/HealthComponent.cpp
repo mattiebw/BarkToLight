@@ -32,7 +32,7 @@ void UHealthComponent::TickComponent(float                        DeltaTime, ELe
 void UHealthComponent::ReceiveDamageInstance(const FDamageInstance& DamageInstance)
 {
 	float OldHealth = Health;
-	Health += DamageInstance.Damage;
+	Health -= DamageInstance.Damage;
 	if (Health > MaxHealth && !bAllowOverheal)
 		Health = MaxHealth;
 	else if (Health < 0)
@@ -48,7 +48,7 @@ void UHealthComponent::ReceiveDamageInstance(const FDamageInstance& DamageInstan
 		OnHurt.Broadcast(-Difference, DamageInstance);
 	// We should provide the damage amount as a positive number (negative damage would be healing!). So lets negate the difference.
 
-	if (Health < 0)
+	if (Health <= 0)
 		OnKilled.Broadcast(DamageInstance);
 
 	FDamageInstance NewDamageInstance = DamageInstance;
@@ -76,7 +76,7 @@ void UHealthComponent::Kill(UObject* Source, FString Description)
 
 void UHealthComponent::SetHealth(float NewHealth, FString Description)
 {
-	ReceiveDamageInstance(FDamageInstance(NewHealth - Health, nullptr, Description));
+	ReceiveDamageInstance(FDamageInstance(Health - NewHealth, nullptr, Description));
 }
 
 void UHealthComponent::SetMaxHealth(float NewMaxHealth)

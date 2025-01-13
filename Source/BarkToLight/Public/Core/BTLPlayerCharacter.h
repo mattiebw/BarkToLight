@@ -102,6 +102,8 @@ protected:
 	void OnEndCrouchInput();
 	UFUNCTION()
 	void OnSelectWeapon(const FInputActionValue& Value);
+	UFUNCTION()
+	void OnReload();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* MoveAction = nullptr;
@@ -119,6 +121,8 @@ protected:
 	UInputAction* CrouchAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* SelectWeaponAction = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* ReloadAction = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext = nullptr;

@@ -29,7 +29,7 @@ public:
 	USkeletalMesh* Mesh;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
-	TSubclassOf<UAnimationAsset> AnimationBP;
+	TSubclassOf<UAnimInstance> AnimationBP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TSubclassOf<AEnemyController> ControllerSubclass = AEnemyController::StaticClass();

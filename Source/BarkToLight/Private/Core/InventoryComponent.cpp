@@ -22,11 +22,13 @@ int UInventoryComponent::TakeAmmo(FName AmmoType, int AmmoAmount)
 		// Not enough ammo - take what we can.
 		int TakenAmmo = Ammo;
 		Ammo = 0;
+		OnAmmoUpdated.Broadcast(AmmoType, 0);
 		return TakenAmmo;
 	}
 
 	// We have enough - take all of it.
 	Ammo -= AmmoAmount;
+	OnAmmoUpdated.Broadcast(AmmoType, Ammo);
 	return AmmoAmount;
 }
 
@@ -40,6 +42,7 @@ void UInventoryComponent::GiveAmmo(FName AmmoType, int AmmoAmount)
 	{
 		AmmoInventory[AmmoType] += AmmoAmount;
 	}
+	OnAmmoUpdated.Broadcast(AmmoType, AmmoInventory[AmmoType]);
 }
 
 bool UInventoryComponent::GiveWeapon(AWeapon* Weapon)

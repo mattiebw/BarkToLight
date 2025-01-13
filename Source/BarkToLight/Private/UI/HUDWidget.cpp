@@ -21,6 +21,7 @@ void UHUDWidget::OnPawnPossessed_Implementation(ABTLPlayerCharacter* Character)
 
 	// Bind to the new player's health component.
 	Player->GetHealthComponent()->OnHealthChanged.AddDynamic(this, &UHUDWidget::OnHealthChanged);
+	Player->GetInventoryComponent()->OnAmmoUpdated.AddDynamic(this, &UHUDWidget::OnInventoryAmmoUpdated);
 
 	// Update the health text immediately.
 	OnHealthChanged(Player->GetHealthComponent()->GetHealth(), 0);
@@ -86,4 +87,21 @@ void UHUDWidget::OnAmmoUpdated(int NewAmmo)
 		               static_cast<int>(SelectedWeapon->GetData()->AmmoUsageType));
 		break;
 	}
+}
+
+void UHUDWidget::OnReserveAmmoUpdated()
+{
+	if (!SelectedWeapon)
+		return;
+
+	if (SelectedWeapon->GetData()->AmmoUsageType == EAmmoUsageType::ClipAndReserve)
+	{
+		ReserveAmmoText->SetText(FText::Format(FText::FromString("/ {0}"),
+		                                       Player->GetInventoryComponent()->GetAmmo(SelectedWeapon->GetData()->AmmoType)));
+	}
+}
+
+void UHUDWidget::OnInventoryAmmoUpdated(FName AmmoType, int NewAmmo)
+{
+	OnReserveAmmoUpdated();
 }

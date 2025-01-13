@@ -39,6 +39,12 @@ public:
 	UFUNCTION()
 	void OnAmmoUpdated(int NewAmmo);
 
+	UFUNCTION()
+	void OnReserveAmmoUpdated();
+
+	UFUNCTION()
+	void OnInventoryAmmoUpdated(FName AmmoType, int NewAmmo);
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "HUD")
 	ABTLPlayerCharacter* Player;
@@ -48,7 +54,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
 	UWidget* AmmoContainer;
-	
+
 	UPROPERTY(BlueprintReadOnly, Category = "HUD", meta = (BindWidget))
 	UTextBlock* MainAmmoText;
 

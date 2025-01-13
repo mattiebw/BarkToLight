@@ -39,4 +39,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Chained")
 	float FiringCooldownSeconds = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Chained")
+	float TargetMorph = 0;
+
+	float CurrentMorph = 0;
 };

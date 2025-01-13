@@ -2,6 +2,7 @@
 
 #include "Weapon/Projectile.h"
 
+#include "BarkToLight.h"
 #include "Core/BTLPlayerCharacter.h"
 #include "Enemy/Enemy.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -15,6 +16,9 @@ AProjectile::AProjectile()
 	MeshComponent     = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Movement"));
 	RootComponent     = MeshComponent;
+
+	MeshComponent->SetCanEverAffectNavigation(false);
+	MeshComponent->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);
 
 	MeshComponent->OnComponentHit.AddUniqueDynamic(this, &AProjectile::OnHit);
 }

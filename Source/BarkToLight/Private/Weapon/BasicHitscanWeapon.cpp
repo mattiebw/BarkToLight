@@ -26,7 +26,10 @@ void ABasicHitscanWeapon::OnFire_Implementation()
 
 	// Perform the line trace.
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Weapon);
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(OwningPlayer);
+	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Weapon, Params);
 
 	// We don't care if it didn't hit something.
 	if (Hit.bBlockingHit)
@@ -34,16 +37,21 @@ void ABasicHitscanWeapon::OnFire_Implementation()
 		if (AEnemy* Enemy = Cast<AEnemy>(Hit.GetActor()))
 		{
 			// We hit an enemy - deal damage and call to blueprint for effects.
-			Enemy->GetHealthComponent()->ReceiveDamageInstance(FDamageInstance(
+				Enemy->GetHealthComponent()->ReceiveDamageInstance(FDamageInstance(
 				HitscanStats->GetDamage(), this,
 				FString::Printf(TEXT("%s's %s"), *OwningPlayer->GetName(), *Data->Name.ToString())));
 			OnEnemyHit(Enemy, Hit);
 		}
 		else
 		{
-			// We hit geometry - call to blueprint for effects (e.g. decal, particles, sound).
+			// We hit geometry - call to blueprint for effects (e.g. decal, particles, sound)ww.
 			OnGeometryHit(Hit);
 		}
+		
+		DrawDebugLine(GetWorld(), Hit.TraceStart, Hit.ImpactPoint, FColor::Green, false, 2.0f, 0, 1.0f);
+	} else
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 1.0f);
 	}
 }
 

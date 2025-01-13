@@ -16,7 +16,7 @@ class BARKTOLIGHT_API UEnemyStats : public UStatsClass
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Setter = SetHealth, Getter = GetHealth, Category = "Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Setter = SetHealth, Category = "Stats")
 	float Health = 5;
 
 public:
