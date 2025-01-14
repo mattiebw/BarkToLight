@@ -1,11 +1,11 @@
 ## TODO
 
 - [x] Enemy spawner generation
-- [ ] Items system
-- [ ] Items equip UI
-- [ ] Weapons equip UI
-- [ ] Viewmodel
-- [ ] Ending castle gen / mini castles
-- [ ] Dog spawner
-- [ ] Loot chests
+- [x] Items system
+- [ ] ~~Items equip UI~~
+- [x] Weapons equip UI
+- [ ] ~~Viewmodel~~
+- [x] Ending castle gen / mini castles
+- [x] Dog spawner
+- [x] Loot chests
 - [ ] THE VIDEO

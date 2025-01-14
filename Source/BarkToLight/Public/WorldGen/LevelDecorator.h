@@ -13,7 +13,7 @@ class ARoomsLevelGenerator;
  * decorations to the level as a whole, such as props, etc, and other important level-wide features such as a navmesh
  * bounds volume and player start. This class is abstract, and should be subclassed to implement the actual decoration.
  */
-UCLASS(Abstract)
+UCLASS(Abstract, Blueprintable)
 class BARKTOLIGHT_API ULevelDecorator : public UObject
 {
 	GENERATED_BODY()

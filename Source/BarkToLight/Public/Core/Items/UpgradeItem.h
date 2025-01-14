@@ -26,7 +26,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats)
 	TArray<FStatUpgrade> Upgrades;
-	
+
+	// This function is implemented by subclasses so that the upgrade item knows what stats class to upgrade.
+	// For example, a weapon upgrade needs to pull the UWeaponStats from the object, while the player upgrade needs to pull the UPlayerStats.
+	// This function should return nullptr if the object is not of the correct type, so we can error out properly.
 	virtual UStatsClass* GetStatsClassForObject(UObject* Object);
 
 protected:

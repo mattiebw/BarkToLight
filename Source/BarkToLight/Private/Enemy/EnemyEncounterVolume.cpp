@@ -2,6 +2,7 @@
 
 #include "Enemy/EnemyEncounterVolume.h"
 
+#include "BarkToLight.h"
 #include "Components/BoxComponent.h"
 #include "Core/BTLPlayerCharacter.h"
 #include "Enemy/Enemy.h"
@@ -11,6 +12,7 @@ AEnemyEncounterVolume::AEnemyEncounterVolume()
 	PrimaryActorTick.bCanEverTick = false;
 
 	OnActorBeginOverlap.AddUniqueDynamic(this, &AEnemyEncounterVolume::OnOverlap);
+	GetCollisionComponent()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);
 }
 
 void AEnemyEncounterVolume::OnOverlap(AActor* OverlappedActor, AActor* OtherActor)

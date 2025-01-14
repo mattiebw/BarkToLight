@@ -49,7 +49,7 @@ AWeapon* AWeapon::CreateWeapon(UObject* WorldContextObject, UWeaponData* Data)
 		return nullptr;
 
 	AWeapon* Weapon = World->SpawnActorDeferred<AWeapon>(Data->WeaponSubclass, FTransform::Identity);
-	Weapon->Data = Data;
+	Weapon->InitialiseFromData(Data);
 	Weapon->FinishSpawning(FTransform::Identity);
 	return Weapon;
 }
@@ -57,8 +57,9 @@ AWeapon* AWeapon::CreateWeapon(UObject* WorldContextObject, UWeaponData* Data)
 void AWeapon::InitialiseFromData(UWeaponData* NewData)
 {
 	Data = NewData;
-	
-	Stats = DuplicateObject(Data->DefaultStats, this);
+
+	if (!Stats)
+		Stats = DuplicateObject(Data->DefaultStats, this);
 	if (!Stats->IsA(RequiredStatsClass))
 		BTL_LOGC_ERROR(GetWorld(), "In Weapon %s, Stats class %s does not extend the required stats class %s", *GetName(), *Stats->GetClass()->GetName(), *RequiredStatsClass->GetName());
 }

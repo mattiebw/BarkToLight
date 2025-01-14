@@ -48,10 +48,10 @@ void ABasicHitscanWeapon::OnFire_Implementation()
 			OnGeometryHit(Hit);
 		}
 		
-		DrawDebugLine(GetWorld(), Hit.TraceStart, Hit.ImpactPoint, FColor::Green, false, 2.0f, 0, 1.0f);
+		// DrawDebugLine(GetWorld(), Hit.TraceStart, Hit.ImpactPoint, FColor::Green, false, 2.0f, 0, 1.0f);
 	} else
 	{
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 1.0f);
+		// DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 1.0f);
 	}
 }
 

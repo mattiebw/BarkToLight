@@ -89,9 +89,9 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 	RemainingHotPathRooms = HotPathLength;
 	TArray<FRoomNode*> RoomsWithFreeOutwardConnectors;
-	FRoomNode *        Current = nullptr, *Prev = nullptr;
-	float Difficulty = 0;
-	
+	FRoomNode *        Current    = nullptr, *Prev = nullptr;
+	float              Difficulty = 0;
+
 	while (RemainingHotPathRooms > 0)
 	{
 		// Lets decrement the remaining hot path rooms now, so we don't forget.
@@ -128,10 +128,12 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		// Create the new room using our factory.
 		ARoom* NewRoom = RoomFactory->Reset()
 		                            ->CreateRoom(NextRoomClass)
-									->SetDifficulty(Difficulty)
+		                            ->SetDifficulty(Difficulty)
 		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                            ->Finish();
 		NewRoom->SetActorLocation(FVector(0, 0, RoomsSettings->MinimumRoomZ));
+		for (AActor* Part : NewRoom->Parts)
+			Part->AddActorWorldOffset(FVector(0, 0, RoomsSettings->MinimumRoomZ));
 		GeneratedRooms.Add(NewRoom);
 
 		if (Current == nullptr)
@@ -168,6 +170,39 @@ void ARoomsLevelGenerator::Generate_Implementation()
 		Current->Children[CurrentRoomOutConnectorIndex]       = FRoomNode(NewRoom);
 		Current->Children[CurrentRoomOutConnectorIndex].Depth = Current->Depth + 1;
 		Current                                               = &Current->Children[CurrentRoomOutConnectorIndex];
+	}
+	
+	// If we have a final room, generate it now.
+	if (RoomsSettings->FinalRoom)
+	{
+		ARoom* NewRoom = RoomFactory->Reset()
+									->CreateRoom(RoomsSettings->FinalRoom)
+									->Finish();
+		GeneratedRooms.Add(NewRoom);
+
+		// Find the valid connecting points for the current room and our new, last room.
+		int NewRoomInConnectorIndex = NewRoom->GetRandomFreeConnectionPointIndex(true, false, true);
+		if (NewRoomInConnectorIndex == -1)
+		{
+			BTL_LOGC_ERROR(GetWorld(),
+						   "In LevelGenerator::Generate(), the final room doesn't have any free inward connectors.");
+			return;
+		}
+
+		int CurrentRoomOutConnectorIndex = Current->Actor->GetRandomFreeConnectionPointIndex(false, true, true);
+		if (CurrentRoomOutConnectorIndex == -1)
+		{
+			BTL_LOGC_ERROR(GetWorld(),
+						   "In LevelGenerator::Generate(), somehow we've selected a room with no free outward connectors.");
+			return;
+		}
+
+		// Connect the rooms.
+		Current->Actor->ConnectTo(CurrentRoomOutConnectorIndex, NewRoom, NewRoomInConnectorIndex);
+
+		// Update the child of the current room, and then update current to be our new room.
+		Current->Children[CurrentRoomOutConnectorIndex]       = FRoomNode(NewRoom);
+		Current->Children[CurrentRoomOutConnectorIndex].Depth = Current->Depth + 1;
 	}
 
 	// Now we want to populate our arrays and variables that the rest of the generation algorithm will use.
@@ -217,7 +252,8 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 		ARoom* NewRoom = RoomFactory->Reset()
 		                            ->CreateRoom(NextRoomInfo->RoomClass)
-									->SetDifficulty(NodeToBranchFrom->Actor->Difficulty + FMath::FRandRange(DifficultyIncreasePerRoomRange.X, DifficultyIncreasePerRoomRange.Y))
+		                            ->SetDifficulty(NodeToBranchFrom->Actor->Difficulty + FMath::FRandRange(
+			                            DifficultyIncreasePerRoomRange.X, DifficultyIncreasePerRoomRange.Y))
 		                            ->AddDecoratorsFromInfos(RoomsSettings->RoomDecorators)
 		                            ->Finish();
 		GeneratedRooms.Add(NewRoom);
@@ -294,17 +330,22 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 			// Find the rotation such that the forward vector of the child connector is opposite that of the parent connector, plus a random offset.
 			// This took so, so long to figure out - I need to learn more about quaternions.
-			FVector CurrentRotation = ConnectorTF.Rotator().RotateVector(FVector::ForwardVector);
-			FVector ChildRotation   = ChildTF.Rotator().RotateVector(FVector::ForwardVector);
-			FQuat   DeltaRotation   = FQuat::FindBetweenNormals(ChildRotation, -CurrentRotation);
+			FRotator OrigRot         = Child->Actor->GetActorRotation();
+			FVector  CurrentRotation = ConnectorTF.Rotator().RotateVector(FVector::ForwardVector);
+			FVector  ChildRotation   = ChildTF.Rotator().RotateVector(FVector::ForwardVector);
+			FQuat    DeltaRotation   = FQuat::FindBetweenNormals(ChildRotation, -CurrentRotation);
 			Child->Actor->AddActorWorldRotation(DeltaRotation);
 			Child->Actor->AddActorWorldRotation(FRotator(0, FMath::RandRange(
-															 CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
-															 .X,
-															 CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
-															 .Y), 0));
+				                                             CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
+				                                             .X,
+				                                             CurrentNode->Actor->Connectors[i].RandomRotationOffsetRange
+				                                             .Y), 0));
+			FRotator NewRot = Child->Actor->GetActorRotation();
 			for (AActor* Part : Child->Actor->Parts)
 			{
+				FVector Offset = Part->GetActorLocation() - Child->Actor->GetActorLocation();
+				Part->AddActorWorldOffset(-Offset);
+				Part->AddActorWorldOffset((NewRot - OrigRot).RotateVector(Offset));
 				Part->AddActorWorldRotation(DeltaRotation);
 			}
 
@@ -316,7 +357,8 @@ void ARoomsLevelGenerator::Generate_Implementation()
 			// We'll do this iteration 20 times, and if we can't find a free spot, we'll just give up.
 			ChildTF = Child->Actor->Connectors[ChildConnectorIndex].Offset * Child->Actor->GetTransform();
 			FTransform CurrentNodeTF = CurrentNode->Actor->GetTransform();
-			CurrentNodeTF.SetLocation(FVector());
+			// MW: I thought just FVector() would work, but it looks like it can be uninitialized!
+			CurrentNodeTF.SetLocation(FVector(0, 0, 0));
 			FTransform ParentTF    = CurrentNode->Actor->Connectors[i].Offset * CurrentNodeTF;
 			FBox       ChildBounds = Child->Actor->GetComponentsBoundingBox();
 			FVector    Direction   = ParentTF.Rotator().RotateVector(FVector::ForwardVector);
@@ -403,13 +445,13 @@ void ARoomsLevelGenerator::Generate_Implementation()
 void ARoomsLevelGenerator::DestroyLevel()
 {
 	for (auto Room : GeneratedRooms)
-		Room->Destroy();
+		if (Room) Room->Destroy();
 	GeneratedRooms.Empty();
 	for (auto Connector : GeneratedConnectors)
-		Connector->Destroy();
+		if (Connector) Connector->Destroy();
 	GeneratedConnectors.Empty();
 	for (auto Actor : OtherGeneratedActors)
-		Actor->Destroy();
+		if (Actor) Actor->Destroy();
 	OtherGeneratedActors.Empty();
 
 	Rooms.Empty();

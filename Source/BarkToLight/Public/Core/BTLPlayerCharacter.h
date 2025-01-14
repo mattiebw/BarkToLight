@@ -8,6 +8,8 @@
 #include "Character/PBPlayerCharacter.h"
 #include "BTLPlayerCharacter.generated.h"
 
+class UWeaponData;
+class UInteractableComponent;
 class ABTLPlayerController;
 class UPlayerStats;
 class UHealthComponent;
@@ -62,6 +64,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player", meta = (MakeEditWidget))
 	FVector WeaponLocation;
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void SubmitPendingWeaponChoice(bool bKeepWeapon, int SlotToDiscard);
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void LootInventory(UInventoryComponent* Inventory);
+
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	bool bHasSavedDog = false;
 	
 	// --- IDamageSource ---
 	virtual AActor*           GetDamageSource_Implementation() override;
@@ -134,9 +145,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	int SelectedWeaponSlot = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
+	UWeaponData* StartingWeapon;
+	
+	TQueue<AWeapon*> PendingWeaponQueue;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	bool bFiring = false;
 
+	constexpr static float InteractDistance = 400.f;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Player")
+	UInteractableComponent* TargetedInteractable = nullptr;
+
+	// Constant declaring the time between checks for the players location.
 	constexpr static float KnownLocationTimer = 0.25f;
 	// The last known valid (grounded) location of the player character. Set every KnownLocationTimer seconds.
 	// We can use this to return to a valid location if we fall of the map.

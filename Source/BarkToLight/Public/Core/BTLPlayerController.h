@@ -27,6 +27,12 @@ public:
 	
 	virtual void OnPossess(APawn* InPawn) override;
 
+	UFUNCTION(BlueprintCallable, Category = "BTL Player Controller")
+	void ShowCursor();
+
+	UFUNCTION(BlueprintCallable, Category = "BTL Player Controller")
+	void HideCursor();
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	UHUDWidget* HUDWidget;

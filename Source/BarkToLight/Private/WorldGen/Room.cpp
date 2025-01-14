@@ -15,7 +15,10 @@ void ARoom::Destroyed()
 
 	// We should also destroy all of the rooms parts when the room itself is destroyed.
 	for (auto Part : Parts)
-		Part->Destroy();
+	{
+		if (Part)
+			Part->Destroy();
+	}
 }
 
 bool ARoom::HasAnyFreeConnectionPoints(bool bAllowIn, bool bAllowOut, bool bAllowBoth)

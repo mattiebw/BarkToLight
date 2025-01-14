@@ -7,6 +7,7 @@
 #include "Engine/DataAsset.h"
 #include "LootTable.generated.h"
 
+class UItemAppearance;
 class UUpgradeItem;
 struct FStatUpgrade;
 class UWeaponData;
@@ -33,6 +34,9 @@ struct FUpgradeItemEntry
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loot Table Upgrade Entry")
 	TSubclassOf<UUpgradeItem> ItemClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loot Table Upgrade Entry")
+	UItemAppearance* ItemAppearance;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot Table Upgrade Entry")
 	float Cost;

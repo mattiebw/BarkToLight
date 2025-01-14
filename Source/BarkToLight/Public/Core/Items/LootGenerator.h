@@ -17,10 +17,12 @@ class BARKTOLIGHT_API ULootGenerator : public UObject
 {
 	GENERATED_BODY()
 
+public:
+	// Used to generate loot into an inventory component (such as a chest).
 	UFUNCTION(BlueprintCallable, Category = Items)
 	void GenerateLootIntoInventory(UInventoryComponent* InventoryComponent, float Luck);
-	
-protected:
+
+	// The loot table to use for generating loot.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items)
 	ULootTable* LootTable;
 };

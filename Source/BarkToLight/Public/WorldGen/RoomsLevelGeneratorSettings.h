@@ -70,6 +70,9 @@ public:
 	TArray<FRoomInfo> Rooms;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
+	TSubclassOf<ARoom> FinalRoom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")
 	TSubclassOf<ARoom> RootRoomOverride;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level Generator Settings")

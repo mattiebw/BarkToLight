@@ -2,6 +2,8 @@
 
 #include "Core/InventoryComponent.h"
 
+#include "BarkToLightLog.h"
+
 UInventoryComponent::UInventoryComponent()
 {
 	// Inventories don't need to tick - they are just data holders
@@ -15,13 +17,13 @@ int UInventoryComponent::TakeAmmo(FName AmmoType, int AmmoAmount)
 		// We haven't got any of this ammo type. Just return 0 for now.
 		return 0;
 	}
-	
+
 	int& Ammo = AmmoInventory[AmmoType];
 	if (Ammo < AmmoAmount)
 	{
 		// Not enough ammo - take what we can.
 		int TakenAmmo = Ammo;
-		Ammo = 0;
+		Ammo          = 0;
 		OnAmmoUpdated.Broadcast(AmmoType, 0);
 		return TakenAmmo;
 	}
@@ -86,4 +88,40 @@ int UInventoryComponent::GetFreeWeaponSlots()
 			FreeSlots++;
 	}
 	return FreeSlots;
+}
+
+void UInventoryComponent::SetWeapon(int Slot, AWeapon* Weapon)
+{
+	if (!Weapons.IsValidIndex(Slot))
+	{
+		BTL_LOGC_ERROR(GetWorld(), "Invalid weapon slot %d", Slot);
+		return;
+	}
+
+	Weapons[Slot] = Weapon;
+	OnWeaponSlotsUpdated.Broadcast();
+}
+
+void UInventoryComponent::GiveItem(UItem* Item)
+{
+	Items.Add(Item);
+}
+
+void UInventoryComponent::RemoveItem(UItem* Item)
+{
+	Items.Remove(Item);
+}
+
+void UInventoryComponent::Clear()
+{
+	Items.Empty();
+	TArray<FName> AmmoNames;
+	AmmoInventory.GetKeys(AmmoNames);
+	for (FName AmmoType : AmmoNames)
+		OnAmmoUpdated.Broadcast(AmmoType, 0);
+	AmmoInventory.Empty();
+	Weapons.Empty();
+
+	SetWeaponSlots(0);
+	OnWeaponSlotsUpdated.Broadcast();
 }

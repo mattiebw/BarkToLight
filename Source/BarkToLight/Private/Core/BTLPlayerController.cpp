@@ -29,3 +29,15 @@ void ABTLPlayerController::OnPossess(APawn* InPawn)
 	
 	PlayerCameraManager->SetFOV(110);
 }
+
+void ABTLPlayerController::ShowCursor()
+{
+	SetInputMode(FInputModeUIOnly());
+	bShowMouseCursor = true;
+}
+
+void ABTLPlayerController::HideCursor()
+{
+	SetInputMode(FInputModeGameOnly());
+	bShowMouseCursor = false;
+}

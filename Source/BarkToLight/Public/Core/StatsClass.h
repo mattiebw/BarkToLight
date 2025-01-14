@@ -66,8 +66,14 @@ public:
 	bool RemoveUpgrade(int Handle);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Stats")
+	FORCEINLINE bool HasAnyUpgrades() const { return StatUpgrades.Num() > 0; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Stats")
 	float GetValue(FName StatName) const;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	TArray<FStatUpgrade> StatUpgrades;
+	TMap<int, FStatUpgrade> StatUpgrades;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Stats")
+	FString GetUpgradeString() const;
 };

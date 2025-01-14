@@ -88,6 +88,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room")
 	TArray<FConnectorPoint> Connectors;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Room", meta = (MakeEditWidget))
+	TArray<FVector> ChestSpawnLocations;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Room")
 	TArray<AActor*> Parts;
 

@@ -38,7 +38,7 @@ protected:
 	FVector ProjectileSpawnLocation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Chained")
-	float FiringCooldownSeconds = 0;
+	float FiringCooldownSeconds = 3; // Start with a 3 second firing delay.
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Chained")
 	float TargetMorph = 0;
