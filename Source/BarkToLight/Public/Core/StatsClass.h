@@ -53,7 +53,7 @@ public:
 /**
  * Implements core behaviour for a class that holds stats (such as Weapon Stats, Enemy Stats, etc).
  */
-UCLASS(EditInlineNew, BlueprintType, Blueprintable, HideCategories = (Object))
+UCLASS(Abstract, EditInlineNew, BlueprintType, Blueprintable, HideCategories = (Object))
 class BARKTOLIGHT_API UStatsClass : public UObject
 {
 	GENERATED_BODY()

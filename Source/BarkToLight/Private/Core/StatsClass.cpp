@@ -20,9 +20,6 @@ int UStatsClass::AddUpgrade(const FStatUpgrade& Upgrade)
 	return Handle;
 }
 
-// Look through our upgrades and remove the one with the given handle.
-// Linear search, slow, but we shouldn't be running this often.
-// If need be, a map could be used to speed this up.
 bool UStatsClass::RemoveUpgrade(int Handle)
 {
 	if (StatUpgrades.Contains(Handle))

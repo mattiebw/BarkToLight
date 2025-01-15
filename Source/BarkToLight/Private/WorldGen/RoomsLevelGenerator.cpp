@@ -292,7 +292,7 @@ void ARoomsLevelGenerator::Generate_Implementation()
 
 	// Layout phase
 	// Correct actor locations and rotations to prevent overlap
-	// BFS through the graph, starting from the root room
+	// Breadth-first iterate through the graph, starting from the root room
 	ToBeProcessed.Empty(); // Ensure our queue from earlier is empty.
 	CurrentNode = nullptr; // Reset our current node.
 	ToBeProcessed.Enqueue(&RootRoom);
